@@ -15,15 +15,15 @@ public class DialNumberRing : MonoBehaviour
     [Tooltip("Height offset above the dial center")]
     public float heightOffset = 0.015f;
 
-    [Tooltip("How many numbers to show around the ring (e.g. 10 shows every 10th on a 100-number dial)")]
-    public int visibleNumberCount = 10;
+    [Tooltip("How many numbers to show around the ring (e.g. 5 shows 0, 20, 40, 60, 80)")]
+    public int visibleNumberCount = 5;
 
     [Tooltip("Total numbers on the dial — must match DialInteractable.totalNumbers")]
     public int totalNumbers = 100;
 
     [Header("Text Appearance")]
     [Tooltip("Font size of the number labels")]
-    public float fontSize = 0.018f;
+    public float fontSize = 0.012f;
 
     [Tooltip("Color of the numbers")]
     public Color textColor = Color.white;

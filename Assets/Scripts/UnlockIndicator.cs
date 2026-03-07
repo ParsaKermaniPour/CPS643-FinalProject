@@ -28,12 +28,10 @@ public class UnlockIndicator : MonoBehaviour
 
     private bool isSpinning = false;
     private Renderer cubeRenderer;
-    private MaterialPropertyBlock propBlock;
 
     void Awake()
     {
         cubeRenderer = GetComponent<Renderer>();
-        propBlock = new MaterialPropertyBlock();
         SetColor(colorDefault);
     }
 
@@ -79,9 +77,7 @@ public class UnlockIndicator : MonoBehaviour
     private void SetColor(Color color)
     {
         if (cubeRenderer == null) return;
-        cubeRenderer.GetPropertyBlock(propBlock);
-        propBlock.SetColor("_BaseColor", color); // URP
-        propBlock.SetColor("_Color", color);     // Built-in fallback
-        cubeRenderer.SetPropertyBlock(propBlock);
+        // Directly set the material color — works with all render pipelines
+        cubeRenderer.material.color = color;
     }
 }
