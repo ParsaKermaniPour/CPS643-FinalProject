@@ -11,6 +11,9 @@ public class CombinationLock : MonoBehaviour
     [Header("Visual Indicator")]
     public UnlockIndicator unlockIndicator;
 
+    [Header("Safe Door")]
+    public SafeDoorAutoOpen safeDoor;
+
     [Header("Events")]
     public UnityEvent onUnlocked;
     public UnityEvent onStepCompleted;
@@ -26,6 +29,9 @@ public class CombinationLock : MonoBehaviour
             dial.onNumberChanged.AddListener(OnNumberChanged);
         else
             Debug.LogError("[CombinationLock] No DialInteractable found on this GameObject!");
+
+        if (safeDoor == null)
+            safeDoor = FindFirstObjectByType<SafeDoorAutoOpen>();
     }
 
     void OnDestroy()
@@ -56,6 +62,8 @@ public class CombinationLock : MonoBehaviour
         {
             Debug.Log("[CombinationLock] UNLOCKED!");
             onUnlocked?.Invoke();
+            if (safeDoor != null) safeDoor.OpenDoor();
+            else Debug.LogError("[CombinationLock] SafeDoorAutoOpen is NULL — assign the safe door script in this component or add one in scene.");
             if (unlockIndicator != null) unlockIndicator.TriggerUnlock();
             else Debug.LogError("[CombinationLock] UnlockIndicator is NULL — drag the cube into the Unlock Indicator field on this component!");
         }

@@ -36,15 +36,22 @@ public class DialInteractable : VRGrabbableBase
     public float CurrentAngle { get; private set; } = 0f;
 
     private float previousControllerAngle;
-    private float targetYRotation;
+    private float targetDialRotation;
+    private float displayedDialRotation;
     private float accumulatedRotation;
+    private int lastReportedTick;
+    private Quaternion initialLocalRotation;
 
     protected override void Awake()
     {
         base.Awake();
-        targetYRotation = 0f;
+        initialLocalRotation = transform.localRotation;
         CurrentAngle = 0f;
         accumulatedRotation = 0f;
+        targetDialRotation = 0f;
+        displayedDialRotation = 0f;
+        lastReportedTick = 0;
+        CurrentNumber = 0;
     }
 
     protected override void OnGrabStart()
@@ -61,13 +68,13 @@ public class DialInteractable : VRGrabbableBase
         float delta = Mathf.DeltaAngle(previousControllerAngle, currentControllerAngle);
         previousControllerAngle = currentControllerAngle;
 
-        targetYRotation += delta;
+        targetDialRotation += delta;
         accumulatedRotation += delta;
 
-        float newY = Mathf.LerpAngle(transform.eulerAngles.y, targetYRotation, rotationSmoothing);
-        transform.rotation = Quaternion.Euler(transform.eulerAngles.x, newY, transform.eulerAngles.z);
+        displayedDialRotation = Mathf.Lerp(displayedDialRotation, targetDialRotation, rotationSmoothing);
+        ApplyDialRotation(displayedDialRotation);
 
-        CurrentAngle = ((accumulatedRotation % 360f) + 360f) % 360f;
+        CurrentAngle = NormalizeAngle(accumulatedRotation);
         onAngleChanged?.Invoke(CurrentAngle);
         onDeltaChanged?.Invoke(delta);
 
@@ -82,19 +89,37 @@ public class DialInteractable : VRGrabbableBase
 
     private float GetControllerAngleAroundDial()
     {
+        if (grabbingControllerTransform == null)
+            return previousControllerAngle;
+
+        Vector3 dialAxis = GetDialAxisWorld();
         Vector3 toController = grabbingControllerTransform.position - transform.position;
-        toController.y = 0;
-        toController.Normalize();
-        return Mathf.Atan2(toController.x, toController.z) * Mathf.Rad2Deg;
+        Vector3 controllerOnPlane = Vector3.ProjectOnPlane(toController, dialAxis);
+
+        if (controllerOnPlane.sqrMagnitude < 0.000001f)
+            return previousControllerAngle;
+
+        controllerOnPlane.Normalize();
+
+        Vector3 reference = GetReferenceDirectionOnDialPlane(dialAxis);
+        if (reference.sqrMagnitude < 0.000001f)
+            return previousControllerAngle;
+
+        return Vector3.SignedAngle(reference, controllerOnPlane, dialAxis);
     }
 
     private void UpdateCurrentNumber()
     {
-        int newNumber = Mathf.RoundToInt(CurrentAngle / 360f * totalNumbers) % totalNumbers;
+        int currentTick = Mathf.FloorToInt(accumulatedRotation / GetDegreesPerTick());
+        if (currentTick == lastReportedTick)
+            return;
 
-        if (newNumber != CurrentNumber)
+        int direction = currentTick > lastReportedTick ? 1 : -1;
+
+        while (lastReportedTick != currentTick)
         {
-            CurrentNumber = newNumber;
+            lastReportedTick += direction;
+            CurrentNumber = PositiveModulo(lastReportedTick, totalNumbers);
             onNumberChanged?.Invoke(CurrentNumber);
             FireHapticTick();
         }
@@ -102,14 +127,54 @@ public class DialInteractable : VRGrabbableBase
 
     private void SnapToNearestTick()
     {
-        float degreesPerTick = 360f / totalNumbers;
-        float snappedAngle = Mathf.Round(CurrentAngle / degreesPerTick) * degreesPerTick;
-        targetYRotation = snappedAngle;
+        float degreesPerTick = GetDegreesPerTick();
+        int snappedTick = Mathf.RoundToInt(accumulatedRotation / degreesPerTick);
 
-        transform.rotation = Quaternion.Euler(transform.eulerAngles.x, snappedAngle, transform.eulerAngles.z);
+        accumulatedRotation = snappedTick * degreesPerTick;
+        targetDialRotation = accumulatedRotation;
+        displayedDialRotation = accumulatedRotation;
+
+        float snappedAngle = NormalizeAngle(accumulatedRotation);
+        ApplyDialRotation(displayedDialRotation);
 
         CurrentAngle = snappedAngle;
         UpdateCurrentNumber();
+    }
+
+    private void ApplyDialRotation(float angle)
+    {
+        transform.localRotation = initialLocalRotation * Quaternion.AngleAxis(angle, Vector3.up);
+    }
+
+    private Vector3 GetDialAxisWorld()
+    {
+        return transform.TransformDirection(Vector3.up).normalized;
+    }
+
+    private Vector3 GetReferenceDirectionOnDialPlane(Vector3 axis)
+    {
+        Vector3 reference = Vector3.ProjectOnPlane(transform.TransformDirection(Vector3.forward), axis);
+
+        if (reference.sqrMagnitude < 0.000001f)
+            reference = Vector3.ProjectOnPlane(transform.TransformDirection(Vector3.right), axis);
+
+        return reference.normalized;
+    }
+
+    private float GetDegreesPerTick()
+    {
+        return 360f / Mathf.Max(1, totalNumbers);
+    }
+
+    private float NormalizeAngle(float angle)
+    {
+        return ((angle % 360f) + 360f) % 360f;
+    }
+
+    private int PositiveModulo(int value, int modulo)
+    {
+        int safeModulo = Mathf.Max(1, modulo);
+        return ((value % safeModulo) + safeModulo) % safeModulo;
     }
 
     private void FireHapticTick()
