@@ -54,7 +54,22 @@ public class HotspotNavigator : MonoBehaviour
         {
             Vector3 eyeOffset = centerEyeAnchor.position - rigRoot.position;
             eyeOffset.y = 0f;
-            rigRoot.position = hotspot.position - eyeOffset;
+
+            // Keep the rig's current floor height and only snap X/Z to the hotspot.
+            Vector3 targetRigPosition = hotspot.position - eyeOffset;
+            targetRigPosition.y = rigRoot.position.y;
+
+            CharacterController characterController = rigRoot.GetComponent<CharacterController>();
+            if (characterController != null && characterController.enabled)
+            {
+                characterController.enabled = false;
+                rigRoot.position = targetRigPosition;
+                characterController.enabled = true;
+            }
+            else
+            {
+                rigRoot.position = targetRigPosition;
+            }
         }
 
         Vector3 toHotspot = hotspot.position - centerEyeAnchor.position;
