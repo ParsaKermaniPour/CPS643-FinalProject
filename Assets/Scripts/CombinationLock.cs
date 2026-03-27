@@ -21,6 +21,7 @@ public class CombinationLock : MonoBehaviour
     public int CurrentStep { get; private set; } = 0;
 
     private DialInteractable dial;
+    private bool hasLoggedMissingIndicator;
 
     void Start()
     {
@@ -32,6 +33,8 @@ public class CombinationLock : MonoBehaviour
 
         if (safeDoor == null)
             safeDoor = FindFirstObjectByType<SafeDoorAutoOpen>();
+
+        ResolveMissingReferences();
     }
 
     void OnDestroy()
@@ -55,6 +58,8 @@ public class CombinationLock : MonoBehaviour
 
     private void AdvanceStep()
     {
+        ResolveMissingReferences();
+
         CurrentStep++;
         Debug.Log($"[CombinationLock] Step {CurrentStep} done! Indicator assigned: {unlockIndicator != null}");
 
@@ -65,13 +70,13 @@ public class CombinationLock : MonoBehaviour
             if (safeDoor != null) safeDoor.OpenDoor();
             else Debug.LogError("[CombinationLock] SafeDoorAutoOpen is NULL — assign the safe door script in this component or add one in scene.");
             if (unlockIndicator != null) unlockIndicator.TriggerUnlock();
-            else Debug.LogError("[CombinationLock] UnlockIndicator is NULL — drag the cube into the Unlock Indicator field on this component!");
+            else LogMissingIndicatorOnce();
         }
         else
         {
             onStepCompleted?.Invoke();
             if (unlockIndicator != null) unlockIndicator.ShowStepProgress(CurrentStep);
-            else Debug.LogError("[CombinationLock] UnlockIndicator is NULL — drag the cube into the Unlock Indicator field on this component!");
+            else LogMissingIndicatorOnce();
         }
     }
 
@@ -80,5 +85,28 @@ public class CombinationLock : MonoBehaviour
         CurrentStep = 0;
         Debug.Log("[CombinationLock] Reset.");
         if (unlockIndicator != null) unlockIndicator.Reset();
+    }
+
+    private void ResolveMissingReferences()
+    {
+        if (unlockIndicator == null)
+        {
+            unlockIndicator = GetComponentInChildren<UnlockIndicator>(true);
+
+            if (unlockIndicator == null)
+                unlockIndicator = FindFirstObjectByType<UnlockIndicator>();
+        }
+
+        if (safeDoor == null)
+            safeDoor = FindFirstObjectByType<SafeDoorAutoOpen>();
+    }
+
+    private void LogMissingIndicatorOnce()
+    {
+        if (hasLoggedMissingIndicator)
+            return;
+
+        hasLoggedMissingIndicator = true;
+        Debug.LogWarning("[CombinationLock] UnlockIndicator was not assigned and no indicator was found in scene. Assign the cube in the Unlock Indicator field or add an UnlockIndicator component to a scene object.");
     }
 }
