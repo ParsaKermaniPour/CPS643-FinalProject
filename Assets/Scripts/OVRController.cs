@@ -32,12 +32,13 @@ public class OVRController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("OVRController OnTriggerEnter: " + other.gameObject.name + ", attachedRigidbody: " + other.attachedRigidbody);
         if (other.attachedRigidbody == null) return;
-        //Debug.Log("Collided with Dial");
         var interactable = other.attachedRigidbody.GetComponent<Interactable>();
+        Debug.Log("Found interactable: " + interactable);
         if (interactable == null || !interactable.enabled) return;
        
-        //Debug.Log("Call Dial on Touch Enter");
+        Debug.Log("Calling OnTouchEnter on: " + other.gameObject.name);
         interactable.OnTouchEnter(this);
     }
 
