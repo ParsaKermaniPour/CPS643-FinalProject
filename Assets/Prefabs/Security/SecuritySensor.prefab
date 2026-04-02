@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8981152048152959941}
   - component: {fileID: 5795284946235636725}
   m_Layer: 0
-  m_Name: SecurityCameraSensor
+  m_Name: SecuritySensor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
