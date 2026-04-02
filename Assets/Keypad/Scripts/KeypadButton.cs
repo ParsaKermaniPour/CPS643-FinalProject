@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace NavKeypad
 {
-    public class KeypadButton : MonoBehaviour
+    public class KeypadButton : Interactable
     {
         [Header("Value")]
         [SerializeField] private string value;
@@ -14,14 +14,53 @@ namespace NavKeypad
         [Header("Component References")]
         [SerializeField] private Keypad keypad;
 
+        [Header("Touch Filter")]
+        [SerializeField] private bool requirePokeTip = true;
+        [SerializeField] private float triggerCooldown = 0.18f;
+
 
         public void PressButton()
         {
+            Debug.Log("PressButton called for: " + value + ", moving: " + moving);
             if (!moving)
             {
                 keypad.AddInput(value);
                 StartCoroutine(MoveSmooth());
             }
+        }
+
+        // VR Controller touch support
+        public override void OnTouchEnter(OVRController ctrl)
+        {
+            // Intentionally ignored for keypad precision.
+            // Key presses should come from tip-trigger OnTriggerEnter only.
+        }
+
+        // Fallback path: trigger directly from controller colliders.
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!CanTriggerFromCollider(other))
+                return;
+
+            if (pokeInside)
+                return;
+
+            if (Time.time < lastTriggerTime + triggerCooldown)
+                return;
+
+            pokeInside = true;
+            lastTriggerTime = Time.time;
+
+            Debug.Log("Button trigger enter from: " + other.name + " value: " + value);
+            PressButton();
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (!CanTriggerFromCollider(other))
+                return;
+
+            pokeInside = false;
         }
 
         // Called by RightHandRaySelector via SendMessage.
@@ -31,6 +70,34 @@ namespace NavKeypad
         }
 
         private bool moving;
+        private float lastTriggerTime;
+        private bool pokeInside;
+
+        private bool CanTriggerFromCollider(Collider other)
+        {
+            if (other == null)
+                return false;
+
+            if (requirePokeTip)
+                return other.GetComponent<KeypadPokeTip>() != null || other.GetComponentInParent<KeypadPokeTip>() != null;
+
+            return IsControllerCollider(other);
+        }
+
+        private static bool IsControllerCollider(Collider other)
+        {
+            if (other == null)
+                return false;
+
+            if (other.GetComponentInParent<OVRController>() != null)
+                return true;
+
+            if (other.CompareTag("LeftController") || other.CompareTag("RightController"))
+                return true;
+
+            string n = other.name;
+            return n.Contains("Controller") || n.Contains("HandAnchor");
+        }
 
         private IEnumerator MoveSmooth()
         {

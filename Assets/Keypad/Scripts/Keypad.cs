@@ -75,6 +75,7 @@ namespace NavKeypad
         {
             if (int.TryParse(currentInput, out var currentKombo))
             {
+                Debug.Log($"Keypad check -> entered: {currentKombo}, expected: {keypadCombo}");
                 bool granted = currentKombo == keypadCombo;
                 if (!displayingResult)
                 {
