@@ -1,13 +1,9 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(SphereCollider))]
+[ExecuteAlways]
 public class SecurityCameraSensor : MonoBehaviour
 {
     [Header("View")]
-    [Tooltip("Optional origin for view checks. If empty, this transform is used.")]
-    public Transform viewOrigin;
-
     [Tooltip("Maximum range in meters.")]
     [Min(0.01f)]
     public float detectionRange = 8f;
@@ -16,106 +12,62 @@ public class SecurityCameraSensor : MonoBehaviour
     [Range(1f, 89f)]
     public float halfFov = 35f;
 
-    [Header("Layer Filtering")]
-    [Tooltip("Only colliders on these layers can be detected.")]
-    public LayerMask targetLayers;
+    [Header("Target")]
+    [Tooltip("Collider used for detection (assign the player's main collider).")]
+    public Collider playerCollider;
+
+    [Header("Occlusion")]
 
     [Tooltip("Layers that can block line-of-sight raycasts.")]
     public LayerMask obstructionLayers;
 
-    [Header("Debug")]
-    [Tooltip("Prints detection state each frame.")]
-    public bool printToConsole = true;
+    [Header("State")]
+    [Tooltip("Pause detection without disabling the object.")]
+    public bool blocked = false;
 
-    private readonly HashSet<Collider> candidates = new HashSet<Collider>();
-    private SphereCollider triggerCollider;
+    [Header("Gizmos")]
+    [Tooltip("Show detection cone gizmo in the scene.")]
+    public bool showGizmos = true;
+
+    [Tooltip("Keep gizmo visible even when this object is not selected.")]
+    public bool persistentGizmo = true;
+
     public bool IsDetected { get; private set; }
-
-    private void Awake()
-    {
-        if (viewOrigin == null)
-            viewOrigin = transform;
-
-        SyncTriggerCollider();
-    }
 
     private void OnValidate()
     {
-        SyncTriggerCollider();
-    }
-
-    private void OnEnable()
-    {
-        IsDetected = false;
-        SyncTriggerCollider();
+        detectionRange = Mathf.Max(0.01f, detectionRange);
+        halfFov = Mathf.Clamp(halfFov, 1f, 89f);
     }
 
     private void Update()
     {
-        IsDetected = HasVisibleTarget();
-
-        if (printToConsole)
-            Debug.Log(IsDetected ? "Detected!" : "Not Detected");
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!IsLayerInMask(other.gameObject.layer, targetLayers))
-            return;
-
-        candidates.Add(other);
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!IsLayerInMask(other.gameObject.layer, targetLayers))
-            return;
-
-        candidates.Remove(other);
+        IsDetected = !blocked && HasVisibleTarget();
     }
 
     private bool HasVisibleTarget()
     {
-        if (candidates.Count == 0)
+        if (playerCollider == null)
             return false;
 
-        List<Collider> stale = null;
+        if (!playerCollider.gameObject.activeInHierarchy)
+            return false;
 
-        foreach (Collider target in candidates)
-        {
-            if (target == null || !target.gameObject.activeInHierarchy)
-            {
-                if (stale == null)
-                    stale = new List<Collider>();
-                stale.Add(target);
-                continue;
-            }
+        Vector3 origin = transform.position;
+        Vector3 closestPoint = playerCollider.ClosestPoint(origin);
+        Vector3 toClosest = closestPoint - origin;
 
-            if (IsTargetVisible(target))
-            {
-                if (stale != null)
-                {
-                    for (int i = 0; i < stale.Count; i++)
-                        candidates.Remove(stale[i]);
-                }
-                return true;
-            }
-        }
+        if (toClosest.sqrMagnitude > detectionRange * detectionRange)
+            return false;
 
-        if (stale != null)
-        {
-            for (int i = 0; i < stale.Count; i++)
-                candidates.Remove(stale[i]);
-        }
-
-        return false;
+        return IsTargetVisible(playerCollider, closestPoint);
     }
 
-    private bool IsTargetVisible(Collider target)
+    private bool IsTargetVisible(Collider target, Vector3 closestPoint)
     {
-        Vector3 origin = viewOrigin.position;
+        Vector3 origin = transform.position;
         Bounds bounds = target.bounds;
-        Vector3 targetPoint = target.ClosestPoint(origin);
+        Vector3 targetPoint = closestPoint;
 
         if (IsPointVisible(origin, targetPoint))
             return true;
@@ -147,7 +99,7 @@ public class SecurityCameraSensor : MonoBehaviour
         if (sqrDistance > detectionRange * detectionRange)
             return false;
 
-        float angle = Vector3.Angle(viewOrigin.forward, toTarget);
+        float angle = Vector3.Angle(transform.forward, toTarget);
         if (angle > halfFov)
             return false;
 
@@ -160,36 +112,66 @@ public class SecurityCameraSensor : MonoBehaviour
         return true;
     }
 
-    private static bool IsLayerInMask(int layer, LayerMask layerMask)
+    private void OnDrawGizmos()
     {
-        return (layerMask.value & (1 << layer)) != 0;
-    }
-
-    private void SyncTriggerCollider()
-    {
-        if (triggerCollider == null)
-            triggerCollider = GetComponent<SphereCollider>();
-
-        if (triggerCollider == null)
+        if (!showGizmos || !persistentGizmo)
             return;
 
-        triggerCollider.isTrigger = true;
-        triggerCollider.radius = detectionRange;
+        DrawDetectionGizmo();
     }
 
     private void OnDrawGizmosSelected()
     {
-        Transform originTransform = viewOrigin != null ? viewOrigin : transform;
-        Vector3 origin = originTransform.position;
-        Vector3 forward = originTransform.forward;
+        if (!showGizmos || persistentGizmo)
+            return;
 
-        Gizmos.color = IsDetected ? Color.red : Color.yellow;
-        Gizmos.DrawWireSphere(origin, detectionRange);
+        DrawDetectionGizmo();
+    }
 
-        Quaternion left = Quaternion.AngleAxis(-halfFov, originTransform.up);
-        Quaternion right = Quaternion.AngleAxis(halfFov, originTransform.up);
+    private void DrawDetectionGizmo()
+    {
+        Vector3 origin = transform.position;
+        Vector3 forward = transform.forward;
+        Vector3 up = transform.up;
+        Vector3 right = transform.right;
 
-        Gizmos.DrawLine(origin, origin + left * forward * detectionRange);
-        Gizmos.DrawLine(origin, origin + right * forward * detectionRange);
+        Gizmos.color = (IsDetected && !blocked) ? Color.red : Color.yellow;
+
+        float coneBaseRadius = Mathf.Tan(halfFov * Mathf.Deg2Rad) * detectionRange;
+        Vector3 coneCenter = origin + forward * detectionRange;
+
+        Vector3 top = coneCenter + up * coneBaseRadius;
+        Vector3 bottom = coneCenter - up * coneBaseRadius;
+        Vector3 coneRight = coneCenter + right * coneBaseRadius;
+        Vector3 coneLeft = coneCenter - right * coneBaseRadius;
+
+        Gizmos.DrawLine(origin, top);
+        Gizmos.DrawLine(origin, bottom);
+        Gizmos.DrawLine(origin, coneRight);
+        Gizmos.DrawLine(origin, coneLeft);
+
+        const int circleSegments = 64;
+        const int sliceCount = 4;
+
+        for (int slice = 1; slice <= sliceCount; slice++)
+        {
+            float sliceT = slice / (float)sliceCount;
+            float sliceDistance = detectionRange * sliceT;
+            float sliceRadius = coneBaseRadius * sliceT;
+            Vector3 sliceCenter = origin + forward * sliceDistance;
+
+            Vector3 previousPoint = sliceCenter + right * sliceRadius;
+            for (int i = 1; i <= circleSegments; i++)
+            {
+                float t = i / (float)circleSegments;
+                float radians = t * Mathf.PI * 2f;
+                Vector3 pointOnCircle = sliceCenter
+                    + right * Mathf.Cos(radians) * sliceRadius
+                    + up * Mathf.Sin(radians) * sliceRadius;
+
+                Gizmos.DrawLine(previousPoint, pointOnCircle);
+                previousPoint = pointOnCircle;
+            }
+        }
     }
 }
