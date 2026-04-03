@@ -34,6 +34,13 @@ public class SecurityCameraSensor : MonoBehaviour
 
     public bool IsDetected { get; private set; }
 
+    private void Awake()
+    {
+        playerCollider = GameObject.FindWithTag("Player").GetComponent<Collider>();
+        if (playerCollider == null)
+            Debug.Log($"Womp Womp");
+    }
+
     private void OnValidate()
     {
         detectionRange = Mathf.Max(0.01f, detectionRange);
