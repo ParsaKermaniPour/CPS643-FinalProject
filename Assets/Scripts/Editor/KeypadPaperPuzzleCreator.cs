@@ -148,7 +148,7 @@ public static class KeypadPaperPuzzleCreator
         titleTmp.fontStyle = FontStyles.Bold;
         titleTmp.color = new Color(0.16f, 0.11f, 0.05f, 1f);
         titleTmp.alignment = TextAlignmentOptions.TopLeft;
-        titleTmp.enableWordWrapping = false;
+        titleTmp.textWrappingMode = TextWrappingModes.NoWrap;
 
         GameObject bodyGo = new GameObject("Body");
         bodyGo.transform.SetParent(canvasGo.transform, false);
@@ -165,7 +165,7 @@ public static class KeypadPaperPuzzleCreator
         bodyTmp.lineSpacing = 4f;
         bodyTmp.color = new Color(0.19f, 0.15f, 0.09f, 1f);
         bodyTmp.alignment = TextAlignmentOptions.TopLeft;
-        bodyTmp.enableWordWrapping = true;
+        bodyTmp.textWrappingMode = TextWrappingModes.Normal;
         bodyTmp.overflowMode = TextOverflowModes.Overflow;
     }
 
