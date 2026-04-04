@@ -2,16 +2,17 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// Robot patrol and chase behavior.
+/// Robot patrol, chase, and investigation behavior.
 /// - Walks waypoint-to-waypoint on PatrolRoute when patrolling.
 /// - Detects player via SecurityCameraSensor; requires 2 seconds of sustained detection to enter chase.
-/// - Chases player using NavMesh pathfinding while detected.
-/// - Returns to patrol after 5 seconds of undetection, resuming from closest waypoint.
+/// - Chases player using NavMesh pathfinding while detected; gives up after 5 seconds out of sight.
+/// - Can be alerted by SecurityCameraAlert to investigate a location for a fixed duration.
+/// - Returns to patrol after chasing or investigating, resuming from closest waypoint.
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
 public class RobotPatrolWalker : MonoBehaviour
 {
-    private enum RobotState { Patrolling, Detecting, Chasing }
+    private enum RobotState { Patrolling, Detecting, Chasing, Investigating }
 
     [Header("Route")]
     [SerializeField] private PatrolRoute patrolRoute;
@@ -33,6 +34,10 @@ public class RobotPatrolWalker : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private string walkingParameter = "IsWalking";
     [SerializeField] private string chasingParameter = "IsChasing";
+    [SerializeField] private string investigatingParameter = "IsInvestigating";
+
+    [Header("Investigation")]
+    [SerializeField, Min(0f)] private float investigationDuration = 10f;
 
     private NavMeshAgent agent;
     private int currentWaypointIndex;
@@ -45,6 +50,13 @@ public class RobotPatrolWalker : MonoBehaviour
     private int waypointIndexBeforeChase;
     private Vector3 chaseTargetPosition;
     private bool wasDetectedLastFrame;
+
+    private Vector3 investigationPosition;
+    private float investigationTimer;
+    private bool hasArrivedAtInvestigationSite;
+    private SecurityCameraAlert cameraAlert;
+
+    public bool IsPatrolling => currentState == RobotState.Patrolling;
 
     private void Awake()
     {
@@ -109,6 +121,10 @@ public class RobotPatrolWalker : MonoBehaviour
 
             case RobotState.Chasing:
                 UpdateChasing();
+                break;
+
+            case RobotState.Investigating:
+                UpdateInvestigating();
                 break;
         }
     }
@@ -222,6 +238,17 @@ public class RobotPatrolWalker : MonoBehaviour
         animator.SetBool(chasingParameter, chasing);
     }
 
+    private void SetInvestigating(bool investigating)
+    {
+        if (animator == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(investigatingParameter))
+            return;
+
+        animator.SetBool(investigatingParameter, investigating);
+    }
+
     private void OnPlayerFirstDetected()
     {
         if (currentState == RobotState.Patrolling)
@@ -232,6 +259,10 @@ public class RobotPatrolWalker : MonoBehaviour
         else if (currentState == RobotState.Chasing)
         {
             lostSightTimer = 0f;  // Reset lost sight timer if vision is regained during chase
+        }
+        else if (currentState == RobotState.Investigating)
+        {
+            detectionTimer = 0f;  // Reset detection timer if vision regained during investigation
         }
     }
 
@@ -280,6 +311,95 @@ public class RobotPatrolWalker : MonoBehaviour
 
         currentWaypointIndex = FindClosestWaypointIndex();
         MoveToCurrentWaypoint();
+    }
+
+    private void UpdateInvestigating()
+    {
+        // If player is detected during investigation, enter chase mode
+        if (cameraSensor.IsDetected)
+        {
+            detectionTimer += Time.deltaTime;
+            if (detectionTimer >= detectionThreshold)
+            {
+                // Abandon investigation, enter chase
+                SetChasing(false);
+                SetInvestigating(false);
+                EnterChaseMode();
+                return;
+            }
+        }
+        else
+        {
+            detectionTimer = 0f;
+        }
+
+        // If hasn't arrived yet, keep running (IsChasing animation)
+        if (!hasArrivedAtInvestigationSite)
+        {
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            {
+                // Arrived at site: switch from chase animation to investigate animation
+                hasArrivedAtInvestigationSite = true;
+                investigationTimer = 0f;
+                SetWalking(false);
+                SetChasing(false);
+                SetInvestigating(true);
+            }
+            return;
+        }
+
+        // Robot has arrived at investigation site; count investigation time
+        investigationTimer += Time.deltaTime;
+
+        if (investigationTimer >= investigationDuration)
+        {
+            ExitInvestigation();
+        }
+    }
+
+    public void BeginInvestigation(Vector3 navMeshPosition, SecurityCameraAlert camera)
+    {
+        // Stop any patrol wait
+        waiting = false;
+        waitTimer = 0f;
+
+        // Initialize investigation state
+        currentState = RobotState.Investigating;
+        investigationPosition = navMeshPosition;
+        cameraAlert = camera;
+        investigationTimer = 0f;
+        hasArrivedAtInvestigationSite = false;
+        detectionTimer = 0f;
+
+        // Set speed and animations
+        agent.speed = chaseSpeed;  // Run to investigation site
+        SetChasing(true);  // Use chase animation while running to site
+
+        // Navigate to investigation position
+        agent.isStopped = false;
+        agent.SetDestination(investigationPosition);
+    }
+
+    private void ExitInvestigation()
+    {
+        currentState = RobotState.Patrolling;
+        investigationTimer = 0f;
+        detectionTimer = 0f;
+        lostSightTimer = 0f;
+
+        agent.speed = patrolSpeed;
+        SetChasing(false);
+        SetInvestigating(false);
+
+        // Find closest waypoint and resume patrol
+        currentWaypointIndex = FindClosestWaypointIndex();
+        MoveToCurrentWaypoint();
+
+        // Notify camera that investigation is complete
+        if (cameraAlert != null)
+        {
+            cameraAlert.RobotFinishedInvestigation();
+        }
     }
 
     private int FindClosestWaypointIndex()

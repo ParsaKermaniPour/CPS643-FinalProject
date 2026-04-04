@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5226558482518330815}
   - component: {fileID: 700935381349395879}
   - component: {fileID: 8390149951688234346}
+  - component: {fileID: -4488786293777368034}
   m_Layer: 8
   m_Name: SecurityCamera
   m_TagString: Untagged
@@ -135,6 +136,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.084564224, y: 0.17700548, z: 0.017759569}
   m_Center: {x: 0, y: 0, z: 0.0088797845}
+--- !u!114 &-4488786293777368034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4546494312164966121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18916ac6f76d39b4aa37fc668cec1e87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SecurityCameraAlert
+  cameraSensor: {fileID: 3069817195611414053}
+  alertThreshold: 3
+  robotContainerName: SecurityRobots
 --- !u!1 &4794386490839130303
 GameObject:
   m_ObjectHideFlags: 0
@@ -147,6 +163,7 @@ GameObject:
   - component: {fileID: 1604574137334758850}
   - component: {fileID: 697460383159587041}
   - component: {fileID: 6731064326508650197}
+  - component: {fileID: 4167549730469719672}
   m_Layer: 8
   m_Name: Base
   m_TagString: Untagged
@@ -249,6 +266,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.053849075, y: 0.041658573, z: 0.053849094}
   m_Center: {x: 0, y: 0.020829286, z: 0}
+--- !u!114 &4167549730469719672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4794386490839130303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60073a0a5a589ce4b9e4c4ab3c592f55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraSwivel
+  cameraSensor: {fileID: 3069817195611414053}
+  minAngle: -90
+  maxAngle: 90
+  swivelSpeed: 30
+  waitTimeAtEnd: 2
 --- !u!1 &8905142737935490600
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,12 +434,8 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5795284946235636725, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
-      propertyPath: persistentGizmo
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5795284946235636725, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
-      propertyPath: obstructionLayers.m_Bits
-      value: 1
+      propertyPath: playerCollider
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8981152048152959941, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -417,7 +447,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8981152048152959941, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.15
+      value: -0.15
       objectReference: {fileID: 0}
     - target: {fileID: 8981152048152959941, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -457,3 +487,14 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8981152048152959941, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
   m_PrefabInstance: {fileID: 8860500823105791440}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3069817195611414053 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5795284946235636725, guid: 31d6328c4a9fa427096afe07c90f284d, type: 3}
+  m_PrefabInstance: {fileID: 8860500823105791440}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9be68f4d58b60b42b4a10d56e6416b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SecurityCameraSensor

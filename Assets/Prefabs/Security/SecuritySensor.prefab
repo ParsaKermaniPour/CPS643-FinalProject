@@ -45,11 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SecurityCameraSensor
   detectionRange: 4.5
-  halfFov: 30
+  halfFov: 40
   playerCollider: {fileID: 0}
   obstructionLayers:
     serializedVersion: 2
     m_Bits: 1
   blocked: 0
   showGizmos: 1
-  persistentGizmo: 0
+  persistentGizmo: 1
