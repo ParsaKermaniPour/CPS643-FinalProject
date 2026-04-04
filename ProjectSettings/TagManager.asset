@@ -4,7 +4,6 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - LeftController
   - RightController
   layers:
   - Default
@@ -13,10 +12,10 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - PlayerBody
+  - PlayerHands
+  - SecurityCamera
+  - SecurityRobot
   - 
   - 
   - 
