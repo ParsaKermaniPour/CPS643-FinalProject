@@ -1,3 +1,5 @@
 - turn on snap turning
 - turn off jumping
 - set right hand grab location tag to RightController (fix this later)
+- set controller driven hand poses to natural
+- add Keypad Poke Tip and 0.005 radius sphere trigger to openxr hand visual
