@@ -19,9 +19,11 @@ public class CameraSwivel : MonoBehaviour
     [SerializeField] private float minAngle = -90f;
     [SerializeField] private float maxAngle = 90f;
     [SerializeField, Min(0.1f)] private float swivelSpeed = 30f;
+    [SerializeField, Min(0.1f)] private float trackingSpeed = 60f;
     [SerializeField, Min(0.1f)] private float waitTimeAtEnd = 2f;
 
     private SwivelState currentSwivel;
+    private SwivelState previousSwivel;
     private bool isTracking;
     private float waitTimer;
     private float currentAngle;
@@ -50,6 +52,7 @@ public class CameraSwivel : MonoBehaviour
         // Initialize angle from current local Y rotation
         currentAngle = NormalizeAngle(transform.localEulerAngles.y);
         currentSwivel = SwivelState.SwivelRight;
+        previousSwivel = SwivelState.SwivelRight;
         isTracking = false;
         waitTimer = 0f;
     }
@@ -62,11 +65,19 @@ public class CameraSwivel : MonoBehaviour
         // Check detection state transitions
         if (cameraSensor.IsDetected && !isTracking)
         {
+            previousSwivel = currentSwivel;  // Remember where we were
             isTracking = true;
         }
         else if (!cameraSensor.IsDetected && isTracking)
         {
             isTracking = false;
+            // If exiting from a Wait state, advance to continue swivelinging
+            if (previousSwivel == SwivelState.WaitLeft)
+                currentSwivel = SwivelState.SwivelRight;
+            else if (previousSwivel == SwivelState.WaitRight)
+                currentSwivel = SwivelState.SwivelLeft;
+            else
+                currentSwivel = previousSwivel;  // Otherwise resume the swivel direction
         }
 
         // Update rotation based on current state
@@ -88,7 +99,7 @@ public class CameraSwivel : MonoBehaviour
         switch (currentSwivel)
         {
             case SwivelState.SwivelLeft:
-                RotateCameraBaseTo(minAngle);
+                RotateCameraBaseTo(minAngle, swivelSpeed);
                 if (Mathf.Abs(currentAngle - minAngle) < 1f)  // Close enough to target
                 {
                     currentSwivel = SwivelState.WaitLeft;
@@ -105,7 +116,7 @@ public class CameraSwivel : MonoBehaviour
                 break;
 
             case SwivelState.SwivelRight:
-                RotateCameraBaseTo(maxAngle);
+                RotateCameraBaseTo(maxAngle, swivelSpeed);
                 if (Mathf.Abs(currentAngle - maxAngle) < 1f)  // Close enough to target
                 {
                     currentSwivel = SwivelState.WaitRight;
@@ -146,10 +157,10 @@ public class CameraSwivel : MonoBehaviour
         targetAngle = Mathf.Clamp(targetAngle, minAngle, maxAngle);
 
         // Rotate toward target
-        RotateCameraBaseTo(targetAngle);
+        RotateCameraBaseTo(targetAngle, trackingSpeed);
     }
 
-    private void RotateCameraBaseTo(float targetAngle)
+    private void RotateCameraBaseTo(float targetAngle, float rotationSpeed)
     {
         // Update current angle
         currentAngle = NormalizeAngle(transform.localEulerAngles.y);
@@ -163,8 +174,8 @@ public class CameraSwivel : MonoBehaviour
         else if (angleDiff < -180f)
             angleDiff += 360f;
 
-        // Rotate toward target at swivelSpeed
-        float rotationAmount = Mathf.Clamp(angleDiff, -swivelSpeed * Time.deltaTime, swivelSpeed * Time.deltaTime);
+        // Rotate toward target at specified speed
+        float rotationAmount = Mathf.Clamp(angleDiff, -rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime);
         float newAngle = currentAngle + rotationAmount;
 
         // Apply rotation
