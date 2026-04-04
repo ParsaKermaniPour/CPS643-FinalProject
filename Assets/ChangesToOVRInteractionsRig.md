@@ -1,3 +1,3 @@
 - turn on snap turning
 - turn off jumping
-- set right hand grab location to RightController (fix this later)
+- set right hand grab location tag to RightController (fix this later)
