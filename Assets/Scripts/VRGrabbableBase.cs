@@ -29,6 +29,10 @@ public abstract class VRGrabbableBase : MonoBehaviour
     private bool rightInRange = false;
     private SphereCollider grabZone;
 
+    // Global per-controller lock so one hand can only hold one grabbable at a time.
+    private static VRGrabbableBase leftControllerOwner;
+    private static VRGrabbableBase rightControllerOwner;
+
     protected virtual void Awake()
     {
         // Add Rigidbody if missing, then lock it so object never physically moves
@@ -70,9 +74,9 @@ public abstract class VRGrabbableBase : MonoBehaviour
         // Try to grab
         if (grabbingController == OVRInput.Controller.None)
         {
-            if (leftInRange && leftGripDown)
+            if (leftInRange && leftGripDown && CanStartGrab(OVRInput.Controller.LTouch))
                 StartGrab(OVRInput.Controller.LTouch);
-            else if (rightInRange && rightGripDown)
+            else if (rightInRange && rightGripDown && CanStartGrab(OVRInput.Controller.RTouch))
                 StartGrab(OVRInput.Controller.RTouch);
         }
         // Release if grip is let go
@@ -89,6 +93,7 @@ public abstract class VRGrabbableBase : MonoBehaviour
     {
         grabbingController = controller;
         grabbingControllerTransform = GetControllerTransform(controller);
+        SetControllerOwner(controller, this);
 
         if (highlightObject != null)
             highlightObject.SetActive(false);
@@ -99,8 +104,56 @@ public abstract class VRGrabbableBase : MonoBehaviour
     private void EndGrab()
     {
         OnGrabEnd();
+        ClearControllerOwner(grabbingController, this);
         grabbingController = OVRInput.Controller.None;
         grabbingControllerTransform = null;
+    }
+
+    protected virtual void OnDisable()
+    {
+        // Safety cleanup so stale owner references never block future grabs.
+        if (grabbingController != OVRInput.Controller.None)
+        {
+            ClearControllerOwner(grabbingController, this);
+            grabbingController = OVRInput.Controller.None;
+            grabbingControllerTransform = null;
+        }
+        else
+        {
+            ClearControllerOwner(OVRInput.Controller.LTouch, this);
+            ClearControllerOwner(OVRInput.Controller.RTouch, this);
+        }
+    }
+
+    private bool CanStartGrab(OVRInput.Controller controller)
+    {
+        VRGrabbableBase owner = GetControllerOwner(controller);
+        return owner == null || owner == this;
+    }
+
+    private static VRGrabbableBase GetControllerOwner(OVRInput.Controller controller)
+    {
+        if (controller == OVRInput.Controller.LTouch)
+            return leftControllerOwner;
+        if (controller == OVRInput.Controller.RTouch)
+            return rightControllerOwner;
+        return null;
+    }
+
+    private static void SetControllerOwner(OVRInput.Controller controller, VRGrabbableBase owner)
+    {
+        if (controller == OVRInput.Controller.LTouch)
+            leftControllerOwner = owner;
+        else if (controller == OVRInput.Controller.RTouch)
+            rightControllerOwner = owner;
+    }
+
+    private static void ClearControllerOwner(OVRInput.Controller controller, VRGrabbableBase owner)
+    {
+        if (controller == OVRInput.Controller.LTouch && leftControllerOwner == owner)
+            leftControllerOwner = null;
+        else if (controller == OVRInput.Controller.RTouch && rightControllerOwner == owner)
+            rightControllerOwner = null;
     }
 
     // Returns the world-space transform of the given controller anchor
