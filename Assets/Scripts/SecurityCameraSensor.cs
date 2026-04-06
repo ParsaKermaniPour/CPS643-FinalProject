@@ -34,11 +34,19 @@ public class SecurityCameraSensor : MonoBehaviour
 
     public bool IsDetected { get; private set; }
 
+    private Light visionLight;
+
     private void Awake()
     {
         playerCollider = GameObject.FindWithTag("Player").GetComponent<Collider>();
         if (playerCollider == null)
             Debug.Log($"Womp Womp");
+
+        Transform visionLightTransform = transform.parent?.Find("VisionLight");
+        if (visionLightTransform != null)
+            visionLight = visionLightTransform.GetComponent<Light>();
+        else
+            Debug.LogWarning("VisionLight sibling not found for SecurityCameraSensor");
     }
 
     private void OnValidate()
@@ -50,6 +58,14 @@ public class SecurityCameraSensor : MonoBehaviour
     private void Update()
     {
         IsDetected = !blocked && HasVisibleTarget();
+
+        if (visionLight != null)
+        {
+            visionLight.color = IsDetected ? Color.red : Color.yellow;
+            visionLight.range = detectionRange;
+            visionLight.spotAngle = 2f * halfFov;
+            visionLight.innerSpotAngle = 0.8f * 2f * halfFov;
+        }
     }
 
     private bool HasVisibleTarget()
