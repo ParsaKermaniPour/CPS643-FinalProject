@@ -9,7 +9,7 @@ using NavKeypad;
 
 public static class KeypadPaperPuzzleCreator
 {
-    [MenuItem("GameObject/Keypad/Create Paper Puzzle Notes (6)", false, 30)]
+    [MenuItem("GameObject/Keypad/Create Paper Puzzle Notes", false, 30)]
     public static void CreatePaperPuzzleNotes()
     {
         System.Random rng = new System.Random();
@@ -47,7 +47,13 @@ public static class KeypadPaperPuzzleCreator
             )
         };
 
-        List<ClueData> orderedForCode = cluePool.OrderBy(_ => rng.Next()).Take(4).ToList();
+        // Keep all clues visible, but only use a random subset for the code.
+        // The remaining visible clue acts as a red herring.
+        const int requiredClueCount = 4;
+        List<ClueData> orderedForCode = cluePool
+            .OrderBy(_ => rng.Next())
+            .Take(Mathf.Clamp(requiredClueCount, 1, cluePool.Count))
+            .ToList();
         int generatedCode = int.Parse(string.Concat(orderedForCode.Select(c => c.Digit.ToString())));
 
         List<NoteData> notes = cluePool
@@ -71,7 +77,7 @@ public static class KeypadPaperPuzzleCreator
         ApplyCodeToKeypads(generatedCode);
 
         Selection.activeTransform = parent;
-        Debug.Log($"Created 6 paper puzzle notes under KeypadPaperNotes. Generated keypad code: {generatedCode}");
+        Debug.Log($"Created {notes.Count} paper puzzle notes under KeypadPaperNotes. Generated keypad code: {generatedCode}");
     }
 
     private static void ClearExistingNotes(Transform parent)
