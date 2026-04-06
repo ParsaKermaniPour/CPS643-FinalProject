@@ -2,11 +2,11 @@ using UnityEngine;
 
 /// <summary>
 /// Camera swivel and tracking system.
-/// - Attach this script to the cameraBase GameObject (the child that rotates on Y axis).
+/// - Attach this script to the cameraBase GameObject (rotates on X and Y axes).
 /// - In idle state, rotates around local Y axis back-and-forth between minAngle and maxAngle with pauses.
-/// - When player is detected (via SecurityCameraSensor), abandons swivelinging and tracks player position.
-/// - Tracking angle is clamped to [minAngle, maxAngle] so player can escape by moving outside range.
-/// - All calculations in local space, accounting for any X/Z tilt of the base.
+/// - When player is detected (via SecurityCameraSensor), tracks player's head center with X and Y rotation.
+/// - X rotation clamped to [-90, 90], Y rotation clamped to [minAngle, maxAngle].
+/// - When player leaves, smoothly returns to idle swivel state.
 /// </summary>
 public class CameraSwivel : MonoBehaviour
 {
@@ -21,12 +21,17 @@ public class CameraSwivel : MonoBehaviour
     [SerializeField, Min(0.1f)] private float swivelSpeed = 30f;
     [SerializeField, Min(0.1f)] private float trackingSpeed = 60f;
     [SerializeField, Min(0.1f)] private float waitTimeAtEnd = 2f;
+    [SerializeField, Min(0.1f)] private float returnToIdleSpeed = 45f;
 
     private SwivelState currentSwivel;
     private SwivelState previousSwivel;
     private bool isTracking;
+    private bool isReturningToIdle;
     private float waitTimer;
     private float currentAngle;
+
+    private float originalXRotation;  // X rotation when tracking starts
+    private float targetIdleY;         // Y angle to return to
 
     private void Start()
     {
@@ -49,11 +54,15 @@ public class CameraSwivel : MonoBehaviour
             maxAngle = temp;
         }
 
+        // Store original X rotation (should remain constant during swivel)
+        originalXRotation = NormalizeAngle(transform.localEulerAngles.x);
+
         // Initialize angle from current local Y rotation
         currentAngle = NormalizeAngle(transform.localEulerAngles.y);
         currentSwivel = SwivelState.SwivelRight;
         previousSwivel = SwivelState.SwivelRight;
         isTracking = false;
+        isReturningToIdle = false;
         waitTimer = 0f;
     }
 
@@ -63,7 +72,7 @@ public class CameraSwivel : MonoBehaviour
             return;
 
         // Check detection state transitions
-        if (cameraSensor.IsDetected && !isTracking)
+        if (cameraSensor.IsDetected && !isTracking && !isReturningToIdle)
         {
             previousSwivel = currentSwivel;  // Remember where we were
             isTracking = true;
@@ -71,19 +80,18 @@ public class CameraSwivel : MonoBehaviour
         else if (!cameraSensor.IsDetected && isTracking)
         {
             isTracking = false;
-            // If exiting from a Wait state, advance to continue swivelinging
-            if (previousSwivel == SwivelState.WaitLeft)
-                currentSwivel = SwivelState.SwivelRight;
-            else if (previousSwivel == SwivelState.WaitRight)
-                currentSwivel = SwivelState.SwivelLeft;
-            else
-                currentSwivel = previousSwivel;  // Otherwise resume the swivel direction
+            isReturningToIdle = true;
+            targetIdleY = (minAngle + maxAngle) * 0.5f;  // Return to center
         }
 
         // Update rotation based on current state
         if (isTracking)
         {
             UpdateTracking();
+        }
+        else if (isReturningToIdle)
+        {
+            UpdateReturnToIdle();
         }
         else
         {
@@ -99,7 +107,7 @@ public class CameraSwivel : MonoBehaviour
         switch (currentSwivel)
         {
             case SwivelState.SwivelLeft:
-                RotateCameraBaseTo(minAngle, swivelSpeed);
+                RotateYOnly(minAngle, swivelSpeed);
                 if (Mathf.Abs(currentAngle - minAngle) < 1f)  // Close enough to target
                 {
                     currentSwivel = SwivelState.WaitLeft;
@@ -116,7 +124,7 @@ public class CameraSwivel : MonoBehaviour
                 break;
 
             case SwivelState.SwivelRight:
-                RotateCameraBaseTo(maxAngle, swivelSpeed);
+                RotateYOnly(maxAngle, swivelSpeed);
                 if (Mathf.Abs(currentAngle - maxAngle) < 1f)  // Close enough to target
                 {
                     currentSwivel = SwivelState.WaitRight;
@@ -140,47 +148,122 @@ public class CameraSwivel : MonoBehaviour
         {
             // Player not found, return to swivelinging
             isTracking = false;
+            isReturningToIdle = true;
+            targetIdleY = (minAngle + maxAngle) * 0.5f;
             return;
         }
 
-        Vector3 playerPos = cameraSensor.playerCollider.gameObject.transform.position;
-        Vector3 dirToPlayer = (playerPos - transform.position).normalized;
+        // Get player's head center
+        Transform playerTransform = cameraSensor.playerCollider.gameObject.transform;
+        Transform headCenter = playerTransform.parent.Find("HeadCenter");
+        if (headCenter == null)
+        {
+            Debug.LogWarning("CameraSwivel: HeadCenter transform not found on player parent!");
+            isTracking = false;
+            isReturningToIdle = true;
+            targetIdleY = (minAngle + maxAngle) * 0.5f;
+            return;
+        }
 
-        // Convert world-space direction to this object's local space
-        // This is INDEPENDENT of parent rotation because we use transform.rotation (world rotation)
-        Vector3 dirLocal = Quaternion.Inverse(transform.rotation) * dirToPlayer;
+        Vector3 headPos = headCenter.position;
+        Vector3 dirToHead = (headPos - transform.position).normalized;
 
-        // Calculate Y angle to face player in LOCAL space
-        float targetAngle = Mathf.Atan2(dirLocal.x, dirLocal.z) * Mathf.Rad2Deg;
+        // Calculate X rotation (pitch) to face the head
+        float targetXRotation = -Mathf.Asin(Mathf.Clamp(dirToHead.y, -1f, 1f)) * Mathf.Rad2Deg;
+        targetXRotation = Mathf.Clamp(targetXRotation, -90f, 90f);
 
-        // Clamp to swivel bounds BEFORE normalizing
-        targetAngle = Mathf.Clamp(targetAngle, minAngle, maxAngle);
+        // Calculate Y rotation (yaw) on horizontal plane
+        Vector3 dirToHeadHorizontal = new Vector3(dirToHead.x, 0, dirToHead.z).normalized;
+        Vector3 cameraForward = transform.rotation * Vector3.forward;
+        Vector3 cameraForwardHorizontal = new Vector3(cameraForward.x, 0, cameraForward.z).normalized;
+        
+        float angleOffset = Vector3.SignedAngle(cameraForwardHorizontal, dirToHeadHorizontal, Vector3.up);
+        float currentLocalY = NormalizeAngle(transform.localEulerAngles.y);
+        float targetYRotation = currentLocalY + angleOffset;
+        targetYRotation = Mathf.Clamp(targetYRotation, minAngle, maxAngle);
 
-        // Rotate toward target
-        RotateCameraBaseTo(targetAngle, trackingSpeed);
+        // Apply rotations
+        RotateXY(targetXRotation, targetYRotation, trackingSpeed);
     }
 
-    private void RotateCameraBaseTo(float targetAngle, float rotationSpeed)
+    private void UpdateReturnToIdle()
     {
-        // Update current angle
+        float currentX = NormalizeAngle(transform.localEulerAngles.x);
+        float currentY = NormalizeAngle(transform.localEulerAngles.y);
+
+        // Smoothly return X to original
+        float xDiff = originalXRotation - currentX;
+        if (Mathf.Abs(xDiff) > 180f)
+            xDiff = xDiff > 0 ? xDiff - 360f : xDiff + 360f;
+
+        float xAmount = Mathf.Clamp(xDiff, -returnToIdleSpeed * Time.deltaTime, returnToIdleSpeed * Time.deltaTime);
+        float newX = currentX + xAmount;
+
+        // Smoothly return Y to target idle position
+        float yDiff = targetIdleY - currentY;
+        if (Mathf.Abs(yDiff) > 180f)
+            yDiff = yDiff > 0 ? yDiff - 360f : yDiff + 360f;
+
+        float yAmount = Mathf.Clamp(yDiff, -returnToIdleSpeed * Time.deltaTime, returnToIdleSpeed * Time.deltaTime);
+        float newY = currentY + yAmount;
+
+        // Apply rotation
+        ApplyXYRotation(newX, newY);
+
+        // Check if returned to idle
+        if (Mathf.Abs(xAmount) < 0.1f && Mathf.Abs(yAmount) < 0.1f)
+        {
+            isReturningToIdle = false;
+            // Resume swivel from center
+            currentSwivel = currentAngle > 0 ? SwivelState.SwivelLeft : SwivelState.SwivelRight;
+        }
+    }
+
+    private void RotateYOnly(float targetAngle, float rotationSpeed)
+    {
+        // Rotate only Y, keeping X at original
         currentAngle = NormalizeAngle(transform.localEulerAngles.y);
 
-        // Calculate rotation direction (shortest path)
         float angleDiff = targetAngle - currentAngle;
-
-        // Normalize difference to -180 to 180
         if (angleDiff > 180f)
             angleDiff -= 360f;
         else if (angleDiff < -180f)
             angleDiff += 360f;
 
-        // Rotate toward target at specified speed
         float rotationAmount = Mathf.Clamp(angleDiff, -rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime);
         float newAngle = currentAngle + rotationAmount;
 
-        // Apply rotation
+        ApplyXYRotation(originalXRotation, newAngle);
+    }
+
+    private void RotateXY(float targetX, float targetY, float rotationSpeed)
+    {
+        // Rotate both X and Y toward targets
+        float currentX = NormalizeAngle(transform.localEulerAngles.x);
+        float currentY = NormalizeAngle(transform.localEulerAngles.y);
+
+        // X rotation
+        float xDiff = targetX - currentX;
+        if (Mathf.Abs(xDiff) > 180f)
+            xDiff = xDiff > 0 ? xDiff - 360f : xDiff + 360f;
+        float xAmount = Mathf.Clamp(xDiff, -rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime);
+        float newX = currentX + xAmount;
+
+        // Y rotation
+        float yDiff = targetY - currentY;
+        if (Mathf.Abs(yDiff) > 180f)
+            yDiff = yDiff > 0 ? yDiff - 360f : yDiff + 360f;
+        float yAmount = Mathf.Clamp(yDiff, -rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime);
+        float newY = currentY + yAmount;
+
+        ApplyXYRotation(newX, newY);
+    }
+
+    private void ApplyXYRotation(float x, float y)
+    {
         Vector3 eulerAngles = transform.localEulerAngles;
-        eulerAngles.y = newAngle;
+        eulerAngles.x = x;
+        eulerAngles.y = y;
         transform.localEulerAngles = eulerAngles;
     }
 

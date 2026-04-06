@@ -35,6 +35,8 @@ public class RobotPatrolWalker : MonoBehaviour
     [SerializeField] private string walkingParameter = "IsWalking";
     [SerializeField] private string chasingParameter = "IsChasing";
     [SerializeField] private string investigatingParameter = "IsInvestigating";
+    [SerializeField, Min(0.1f)] private float patrolAnimSpeed = 2f;
+    [SerializeField, Min(0.1f)] private float chaseAnimSpeed = 1.5f;
 
     [Header("Investigation")]
     [SerializeField, Min(0f)] private float investigationDuration = 10f;
@@ -225,6 +227,8 @@ public class RobotPatrolWalker : MonoBehaviour
             return;
 
         animator.SetBool(walkingParameter, walking);
+        if (walking)
+            animator.speed = patrolSpeed * patrolAnimSpeed;
     }
 
     private void SetChasing(bool chasing)
@@ -236,6 +240,8 @@ public class RobotPatrolWalker : MonoBehaviour
             return;
 
         animator.SetBool(chasingParameter, chasing);
+        if (chasing)
+            animator.speed = chaseSpeed * chaseAnimSpeed;
     }
 
     private void SetInvestigating(bool investigating)
@@ -247,6 +253,8 @@ public class RobotPatrolWalker : MonoBehaviour
             return;
 
         animator.SetBool(investigatingParameter, investigating);
+        if (investigating)
+            animator.speed = chaseSpeed * chaseAnimSpeed;
     }
 
     private void OnPlayerFirstDetected()
@@ -371,8 +379,8 @@ public class RobotPatrolWalker : MonoBehaviour
         hasArrivedAtInvestigationSite = false;
         detectionTimer = 0f;
 
-        // Set speed and animations
-        agent.speed = chaseSpeed;  // Run to investigation site
+        // Set speed and animations (runs to site using chase speed/anim)
+        agent.speed = chaseSpeed;
         SetChasing(true);  // Use chase animation while running to site
 
         // Navigate to investigation position
