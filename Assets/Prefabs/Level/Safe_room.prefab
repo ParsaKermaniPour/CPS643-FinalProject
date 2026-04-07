@@ -22290,6 +22290,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 919862858488832173}
     m_Modifications:
+    - target: {fileID: 4865357033126151812, guid: 804682af26b13694396d40cca0dfec81, type: 3}
+      propertyPath: m_TagString
+      value: Potion
+      objectReference: {fileID: 0}
     - target: {fileID: 5589999339582313721, guid: 804682af26b13694396d40cca0dfec81, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.05

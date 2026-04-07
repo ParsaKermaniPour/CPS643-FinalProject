@@ -8,6 +8,8 @@ TagManager:
   - LeftController
   - Door
   - Fingertip
+  - Ray_Gun
+  - Potion
   layers:
   - Default
   - TransparentFX
