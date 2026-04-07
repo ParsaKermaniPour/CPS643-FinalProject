@@ -52,7 +52,26 @@ public class DialNumberRing : MonoBehaviour
 
     void Start()
     {
-        BuildRing();
+        RemoveAllNumberRings();
+    }
+
+    private void RemoveAllNumberRings()
+    {
+        Transform root = transform.root != null ? transform.root : transform;
+        Transform[] all = root.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < all.Length; i++)
+        {
+            Transform t = all[i];
+            if (t == null || t.name != "NumberRing_Static")
+                continue;
+
+            if (Application.isPlaying)
+                Destroy(t.gameObject);
+#if UNITY_EDITOR
+            else
+                DestroyImmediate(t.gameObject);
+#endif
+        }
     }
 
     void BuildRing()
@@ -230,6 +249,12 @@ public class DialNumberRing : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (!Application.isPlaying)
+            RemoveAllNumberRings();
+    }
+
     // Draw the ring in editor so you can preview radius before pressing play
     void OnDrawGizmosSelected()
     {
