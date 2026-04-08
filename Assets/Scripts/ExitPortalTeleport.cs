@@ -4,6 +4,10 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Collider))]
 public class ExitPortalTeleport : MonoBehaviour
 {
+    [Header("Debug")]
+    [Tooltip("Print detailed portal checks to Console")]
+    public bool verboseDebug = true;
+
     [Header("Player Detection")]
     [Tooltip("Player tag used when no OVRCameraRig is found on the entering collider hierarchy")]
     public string playerTag = "Player";
@@ -79,39 +83,70 @@ public class ExitPortalTeleport : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (verboseDebug)
+            Debug.Log($"[ExitPortal] OnTriggerEnter by '{SafeName(other != null ? other.gameObject : null)}' tag='{SafeTag(other != null ? other.gameObject : null)}' layer={SafeLayer(other != null ? other.gameObject : null)}");
+
         if (Time.time < nextAllowedTriggerTime)
+        {
+            if (verboseDebug)
+                Debug.Log($"[ExitPortal] Ignored due to cooldown. Remaining: {(nextAllowedTriggerTime - Time.time):F2}s");
             return;
+        }
 
         bool hasPlayer = TryGetPlayerRoot(other, out Transform playerRoot, out OVRCameraRig rig);
+
+        if (verboseDebug)
+            Debug.Log($"[ExitPortal] Player detect: hasPlayer={hasPlayer}, rig={(rig != null ? rig.name : "null")}, playerRoot={(playerRoot != null ? playerRoot.name : "null")}");
 
         // VR fallback: many rigs don't have a body collider, but held item colliders do enter triggers.
         if (!hasPlayer && allowHeldObjectiveTriggerEntry)
         {
             if (TryGetHeldObjectiveFromCollider(other, out string hitTag))
             {
+                if (verboseDebug)
+                    Debug.Log($"[ExitPortal] Entered collider is held objective: {hitTag}");
+
                 rig = FindFirstObjectByType<OVRCameraRig>();
                 if (rig != null)
                 {
                     playerRoot = rig.transform;
                     hasPlayer = true;
+                    if (verboseDebug)
+                        Debug.Log($"[ExitPortal] Fallback rig found: {rig.name}");
                 }
+            }
+            else if (verboseDebug)
+            {
+                Debug.Log("[ExitPortal] Held-object fallback did not match required held tags.");
             }
         }
 
         if (!hasPlayer)
+        {
+            if (verboseDebug)
+                Debug.LogWarning("[ExitPortal] Rejected: no player root/rig detected.");
             return;
+        }
 
         nextAllowedTriggerTime = Time.time + Mathf.Max(0f, triggerCooldownSeconds);
 
-        if (!HasRequiredHeldObjective())
+        bool hasRequired = HasRequiredHeldObjective();
+        if (verboseDebug)
+            Debug.Log($"[ExitPortal] Objective check: hasRequired={hasRequired}, requireBoth={requireBothTags}, requiredA='{requiredTagA}', requiredB='{requiredTagB}'");
+
+        if (!hasRequired)
         {
             onFail?.Invoke();
+            if (verboseDebug)
+                Debug.LogWarning("[ExitPortal] Rejected: required held objective not detected.");
             return;
         }
 
         TeleportPlayer(playerRoot, rig);
         TriggerCelebration();
         onSuccess?.Invoke();
+        if (verboseDebug)
+            Debug.Log("[ExitPortal] Success: teleported + celebration triggered.");
     }
 
     private bool TryGetPlayerRoot(Collider other, out Transform playerRoot, out OVRCameraRig rig)
@@ -184,7 +219,11 @@ public class ExitPortalTeleport : MonoBehaviour
                 grabbable = item.GetComponentInChildren<VRGrabbableBase>();
 
             if (grabbable != null && grabbable.IsGrabbed)
+            {
+                if (verboseDebug)
+                    Debug.Log($"[ExitPortal] Held match: tag='{tagName}', object='{item.name}', grabbable='{grabbable.name}'");
                 return true;
+            }
         }
 
         return false;
@@ -235,6 +274,9 @@ public class ExitPortalTeleport : MonoBehaviour
         Vector3 targetPosition = teleportTarget != null ? teleportTarget.position : fallbackTeleportPosition;
         Quaternion targetRotation = teleportTarget != null ? teleportTarget.rotation : playerRoot.rotation;
 
+        if (verboseDebug)
+            Debug.Log($"[ExitPortal] Teleport base target: {(teleportTarget != null ? teleportTarget.name : "fallback")}, pos={targetPosition}");
+
         if (snapToGround)
             targetPosition = ResolveGroundedTarget(targetPosition);
 
@@ -242,11 +284,15 @@ public class ExitPortalTeleport : MonoBehaviour
         {
             Vector3 eyeToRigOffset = rig.transform.position - rig.centerEyeAnchor.position;
             Vector3 rigTarget = targetPosition + eyeToRigOffset;
+            if (verboseDebug)
+                Debug.Log($"[ExitPortal] Rig teleport: rig='{rig.name}' eyeOffset={eyeToRigOffset} finalPos={rigTarget}");
             ApplyTransformSafely(rig.transform, rigTarget, targetRotation, applyTargetRotation && teleportTarget != null);
 
             return;
         }
 
+        if (verboseDebug)
+            Debug.Log($"[ExitPortal] Root teleport: root='{(playerRoot != null ? playerRoot.name : "null")}' finalPos={targetPosition}");
         ApplyTransformSafely(playerRoot, targetPosition, targetRotation, applyTargetRotation && teleportTarget != null);
     }
 
@@ -255,7 +301,15 @@ public class ExitPortalTeleport : MonoBehaviour
         Vector3 rayOrigin = rawTarget + Vector3.up * Mathf.Max(0.1f, groundRayStartHeight);
         float rayDistance = Mathf.Max(0.5f, groundRayDistance);
         if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, rayDistance, groundLayers, QueryTriggerInteraction.Ignore))
-            return hit.point + Vector3.up * Mathf.Max(0f, groundOffset);
+        {
+            Vector3 grounded = hit.point + Vector3.up * Mathf.Max(0f, groundOffset);
+            if (verboseDebug)
+                Debug.Log($"[ExitPortal] Ground snap hit '{hit.collider.name}' at {hit.point}, groundedPos={grounded}");
+            return grounded;
+        }
+
+        if (verboseDebug)
+            Debug.LogWarning($"[ExitPortal] Ground snap miss from origin={rayOrigin}, distance={rayDistance}. Using raw target {rawTarget}");
 
         return rawTarget;
     }
@@ -283,6 +337,10 @@ public class ExitPortalTeleport : MonoBehaviour
         if (restored)
             cc.enabled = true;
     }
+
+    private static string SafeName(GameObject go) => go != null ? go.name : "null";
+    private static string SafeTag(GameObject go) => go != null ? go.tag : "null";
+    private static int SafeLayer(GameObject go) => go != null ? go.layer : -1;
 
     private void TriggerCelebration()
     {
