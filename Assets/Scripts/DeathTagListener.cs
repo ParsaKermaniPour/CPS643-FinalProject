@@ -11,6 +11,12 @@ public class DeathTagListener : MonoBehaviour
     [Tooltip("Radius for overlap check around player head/body")]
     public float overlapCheckRadius = 0.2f;
 
+    [Tooltip("Approximate body height used for capsule overlap")]
+    public float overlapBodyHeight = 1.6f;
+
+    [Tooltip("Extra downward check distance from rig root for death floors")]
+    public float feetRayDistance = 0.35f;
+
     [Header("Teleport")]
     public Transform deathRoomSpawn;
     public Vector3 fallbackDeathRoomPosition = new Vector3(0f, 2f, 0f);
@@ -21,7 +27,7 @@ public class DeathTagListener : MonoBehaviour
     public float cooldownSeconds = 0.75f;
 
     private float nextAllowedTime;
-    private readonly Collider[] overlapHits = new Collider[16];
+    private readonly Collider[] overlapHits = new Collider[32];
 
     private void Update()
     {
@@ -35,26 +41,10 @@ public class DeathTagListener : MonoBehaviour
         if (rig == null)
             return;
 
-        Vector3 origin = rig.centerEyeAnchor != null ? rig.centerEyeAnchor.position : rig.transform.position;
-        int hitCount = Physics.OverlapSphereNonAlloc(
-            origin,
-            Mathf.Max(0.01f, overlapCheckRadius),
-            overlapHits,
-            ~0,
-            QueryTriggerInteraction.Collide);
-
-        for (int i = 0; i < hitCount; i++)
+        if (IsTouchingDeath(rig))
         {
-            Collider hit = overlapHits[i];
-            if (hit == null)
-                continue;
-
-            if (!hit.CompareTag(deathTag))
-                continue;
-
             nextAllowedTime = Time.time + Mathf.Max(0f, cooldownSeconds);
             TeleportToDeathRoom();
-            break;
         }
     }
 
@@ -119,5 +109,50 @@ public class DeathTagListener : MonoBehaviour
 
         if (restoreController)
             cc.enabled = true;
+    }
+
+    private bool IsTouchingDeath(OVRCameraRig rig)
+    {
+        Vector3 eyePos = rig.centerEyeAnchor != null ? rig.centerEyeAnchor.position : rig.transform.position;
+        Vector3 rootPos = rig.transform.position;
+
+        float radius = Mathf.Max(0.01f, overlapCheckRadius);
+        float bodyHeight = Mathf.Max(radius * 2.1f, overlapBodyHeight);
+        Vector3 capsuleTop = rootPos + Vector3.up * (bodyHeight - radius);
+        Vector3 capsuleBottom = rootPos + Vector3.up * radius;
+
+        int hitCount = Physics.OverlapCapsuleNonAlloc(
+            capsuleTop,
+            capsuleBottom,
+            radius,
+            overlapHits,
+            ~0,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider hit = overlapHits[i];
+            if (hit != null && hit.CompareTag(deathTag))
+                return true;
+        }
+
+        // Backup check for thin trigger floors directly under player.
+        float rayDistance = Mathf.Max(0.01f, feetRayDistance);
+        if (Physics.Raycast(rootPos + Vector3.up * 0.05f, Vector3.down, out RaycastHit floorHit, rayDistance, ~0, QueryTriggerInteraction.Collide))
+        {
+            if (floorHit.collider != null && floorHit.collider.CompareTag(deathTag))
+                return true;
+        }
+
+        // Keep a tiny eye-level overlap as final fallback.
+        hitCount = Physics.OverlapSphereNonAlloc(eyePos, radius, overlapHits, ~0, QueryTriggerInteraction.Collide);
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider hit = overlapHits[i];
+            if (hit != null && hit.CompareTag(deathTag))
+                return true;
+        }
+
+        return false;
     }
 }
