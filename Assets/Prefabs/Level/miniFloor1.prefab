@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 755574819693046229, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_Intensity
-      value: 1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1643697264575970810, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_AgentTypeID
@@ -82,11 +82,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4250004438716546472, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_Intensity
-      value: 1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 4762096323496688716, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_Intensity
-      value: 1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5480282831098575502, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: patrolSpeed
@@ -154,7 +154,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6747865530189890403, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_Intensity
-      value: 1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 8183500678309528369, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_AgentTypeID
