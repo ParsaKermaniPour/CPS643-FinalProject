@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_Intensity
       value: 0.2
       objectReference: {fileID: 0}
+    - target: {fileID: 1447038104677382004, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+      propertyPath: Mute
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1600323990073443035, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+      propertyPath: Mute
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1643697264575970810, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_AgentTypeID
       value: 1479372276
@@ -35,6 +43,10 @@ PrefabInstance:
     - target: {fileID: 2035999716731791220, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: showGizmos
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2596819117782847797, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+      propertyPath: Mute
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2758681526506105223, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_AgentTypeID
@@ -87,6 +99,14 @@ PrefabInstance:
     - target: {fileID: 4762096323496688716, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_Intensity
       value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5149396162702431314, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+      propertyPath: Mute
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5328249019995440097, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+      propertyPath: Mute
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5480282831098575502, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: patrolSpeed
@@ -159,6 +179,10 @@ PrefabInstance:
     - target: {fileID: 8183500678309528369, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: m_AgentTypeID
       value: 1479372276
+      objectReference: {fileID: 0}
+    - target: {fileID: 8333503108905751881, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+      propertyPath: Mute
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8871921403553782207, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
       propertyPath: blocked
@@ -1117,6 +1141,7 @@ PrefabInstance:
     - {fileID: 6992832199387889590, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
     - {fileID: 2767246653989374481, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
     - {fileID: 2767246653989374487, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
+    - {fileID: 6992832199387907340, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3703110538722371498, guid: 1ba6a0085445a494c9a572ff2ded4e39, type: 3}
