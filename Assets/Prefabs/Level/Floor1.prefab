@@ -4595,7 +4595,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3069817195611414053, guid: ae7e4dde92a78594b8d91e65e0d01bd5, type: 3}
       propertyPath: halfFov
-      value: 45
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 4167549730469719672, guid: ae7e4dde92a78594b8d91e65e0d01bd5, type: 3}
       propertyPath: maxAngle
@@ -4623,11 +4623,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5156010505024978805, guid: ae7e4dde92a78594b8d91e65e0d01bd5, type: 3}
       propertyPath: m_SpotAngle
-      value: 90
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 5156010505024978805, guid: ae7e4dde92a78594b8d91e65e0d01bd5, type: 3}
       propertyPath: m_InnerSpotAngle
-      value: 72
+      value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 7720747171990663209, guid: ae7e4dde92a78594b8d91e65e0d01bd5, type: 3}
       propertyPath: m_LocalPosition.x
