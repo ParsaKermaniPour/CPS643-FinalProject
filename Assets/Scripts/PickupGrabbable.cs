@@ -4,15 +4,23 @@ public class PickupGrabbable : VRGrabbableBase
 {
     public float followSmoothing = 20f;
     public bool dropWithPhysics = true;
+    public bool disableCollisionsWhileHeld = true;
 
     private Vector3 positionOffset;
     private Quaternion rotationOffset;
     private Rigidbody rb;
+    private Collider[] cachedColliders;
+    private bool[] cachedIsTriggerStates;
 
     protected override void Awake()
     {
         base.Awake();
         rb = GetComponent<Rigidbody>();
+
+        cachedColliders = GetComponentsInChildren<Collider>(true);
+        cachedIsTriggerStates = new bool[cachedColliders.Length];
+        for (int i = 0; i < cachedColliders.Length; i++)
+            cachedIsTriggerStates[i] = cachedColliders[i] != null && cachedColliders[i].isTrigger;
     }
 
     protected override void OnGrabStart()
@@ -29,6 +37,8 @@ public class PickupGrabbable : VRGrabbableBase
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
+
+        SetCollidersTriggerState(true);
     }
 
     protected override void OnGrabUpdate()
@@ -57,5 +67,29 @@ public class PickupGrabbable : VRGrabbableBase
             rb.isKinematic = true;
             rb.useGravity = false;
         }
+
+        SetCollidersTriggerState(false);
+    }
+
+    private void SetCollidersTriggerState(bool holding)
+    {
+        if (!disableCollisionsWhileHeld || cachedColliders == null || cachedIsTriggerStates == null)
+            return;
+
+        int count = Mathf.Min(cachedColliders.Length, cachedIsTriggerStates.Length);
+        for (int i = 0; i < count; i++)
+        {
+            Collider col = cachedColliders[i];
+            if (col == null)
+                continue;
+
+            col.isTrigger = holding ? true : cachedIsTriggerStates[i];
+        }
+    }
+
+    protected override void OnDisable()
+    {
+        SetCollidersTriggerState(false);
+        base.OnDisable();
     }
 }
