@@ -790,6 +790,7 @@ GameObject:
   - component: {fileID: 8181815843544749094}
   - component: {fileID: 6192391285058439714}
   - component: {fileID: 338979304752954293}
+  - component: {fileID: 1932482749070721401}
   m_Layer: 0
   m_Name: ReturnButton
   m_TagString: Untagged
@@ -906,9 +907,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeathRoomFlow
   mode: 1
   playerTag: Player
-  buttonActivationTag: FingerTip
+  buttonActivationTag: Fingertip
   detectOVRCameraRig: 1
-  deathRoomSpawn: {fileID: 0}
+  deathRoomSpawn: {fileID: 9158723582479057943}
   planningRoomSpawn: {fileID: 0}
   fallbackDeathRoomPosition: {x: 0, y: 2, z: 0}
   fallbackPlanningRoomPosition: {x: 55, y: 0, z: -60}
@@ -921,13 +922,55 @@ MonoBehaviour:
   groundRayStartHeight: 4
   groundRayDistance: 20
   groundOffset: 0.05
-  pulseRedGlow: 0
+  pulseRedGlow: 1
   redGlowRenderers: []
   redGlowColor: {r: 1, g: 0.1, b: 0.1, a: 1}
   minGlow: 0.4
   maxGlow: 2.2
   glowPulseSpeed: 2
   cooldownSeconds: 0.75
+  enablePuzzleHardReset: 1
+  resetTiming: 1
+  puzzleResetEntries:
+  - prefab: {fileID: 5568024293022973862, guid: d302ab2f5263b8340a9324f07ba3caf8, type: 3}
+    liveInstance: {fileID: 0}
+    cachedPosition: {x: -28, y: -5, z: 2}
+    cachedRotation: {x: -0, y: -0, z: -0, w: 1}
+    cachedParent: {fileID: 0}
+    hasCached: 1
+  - prefab: {fileID: 9001060076008351169, guid: 3632a08b330aa26498981bf8b8ba2c0a, type: 3}
+    liveInstance: {fileID: 0}
+    cachedPosition: {x: -85, y: -5, z: -63}
+    cachedRotation: {x: -0, y: 0.7071059, z: -0, w: 0.7071078}
+    cachedParent: {fileID: 0}
+    hasCached: 1
+--- !u!54 &1932482749070721401
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4037135918985256905}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &4193821977109969606
 GameObject:
   m_ObjectHideFlags: 0
