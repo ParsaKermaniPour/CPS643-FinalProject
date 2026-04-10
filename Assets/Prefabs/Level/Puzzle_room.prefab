@@ -2866,6 +2866,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: -90
       objectReference: {fileID: 0}
+    - target: {fileID: 3574266621301855640, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
+      propertyPath: lasersRoot
+      value: 
+      objectReference: {fileID: 6810595017593321251}
     - target: {fileID: 3576800568527870611, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_text
       value: Number of letters in Apple
@@ -2974,6 +2978,10 @@ PrefabInstance:
       propertyPath: m_PresetInfoIsWorld
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7198530394143993227, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
+      propertyPath: notesRoot
+      value: 
+      objectReference: {fileID: 5747933701065066574}
     - target: {fileID: 8211936462453433162, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_text
       value: Digit 5
@@ -30509,6 +30517,11 @@ PrefabInstance:
 --- !u!4 &163591315729560087 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6308144810796500773, guid: 51b73772ca9356e4a826044cca62d1e2, type: 3}
+  m_PrefabInstance: {fileID: 6182942181739328818}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6810595017593321251 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 813499182498710033, guid: 51b73772ca9356e4a826044cca62d1e2, type: 3}
   m_PrefabInstance: {fileID: 6182942181739328818}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6191044549718897176
