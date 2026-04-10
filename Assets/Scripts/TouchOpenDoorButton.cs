@@ -6,6 +6,9 @@ public class TouchOpenDoorButton : Interactable
     [Header("Door Target")]
     public SafeDoorAutoOpen targetDoor;
 
+    [Header("Optional Puzzle Reset")]
+    public PuzzleReset puzzleReset;
+
     [Header("Input")]
     public bool requireGrip = false;
     public bool oneShot = true;
@@ -48,9 +51,9 @@ public class TouchOpenDoorButton : Interactable
 
     private void TryTrigger(OVRController ctrl)
     {
-        if (targetDoor == null)
+        if (targetDoor == null && puzzleReset == null)
         {
-            Debug.LogWarning("TouchOpenDoorButton: targetDoor is not assigned.", this);
+            Debug.LogWarning("TouchOpenDoorButton: assign targetDoor and/or puzzleReset.", this);
             return;
         }
 
@@ -60,7 +63,12 @@ public class TouchOpenDoorButton : Interactable
         if (Time.time < nextAllowedTime)
             return;
 
-        targetDoor.OpenDoor();
+        if (targetDoor != null)
+            targetDoor.OpenDoor();
+
+        if (puzzleReset != null)
+            puzzleReset.ApplyPuzzleReset();
+
         hasTriggered = true;
         nextAllowedTime = Time.time + Mathf.Max(0f, cooldownSeconds);
 

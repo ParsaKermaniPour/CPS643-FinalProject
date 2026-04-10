@@ -1,111 +1,106 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class PuzzleReset : MonoBehaviour
 {
-    [System.Serializable]
-    public class PuzzleResetEntry
-    {
-        [Tooltip("Prefab to respawn")]
-        public GameObject prefab;
+	[System.Serializable]
+	public class PuzzleResetEntry
+	{
+		[Tooltip("Prefab to respawn")]
+		public GameObject prefab;
 
-        [Tooltip("Current instance")]
-        public GameObject liveInstance;
+		[Tooltip("Current instance")]
+		public GameObject liveInstance;
 
-        [HideInInspector] public Vector3 cachedPosition;
-        [HideInInspector] public Quaternion cachedRotation;
-        [HideInInspector] public Transform cachedParent;
-        [HideInInspector] public bool hasCached;
-    }
+		[HideInInspector] public Vector3 cachedPosition;
+		[HideInInspector] public Quaternion cachedRotation;
+		[HideInInspector] public Transform cachedParent;
+		[HideInInspector] public bool hasCached;
+	}
 
-    public enum ResetTiming
-    {
-        OnDeathTrigger,
-        OnReturnButton,
-        OnBoth
-    }
+	[Tooltip("Only these entries are reset")]
+	public PuzzleResetEntry[] puzzleResetEntries;
 
-    [Header("Puzzle Hard Reset")]
-    [Tooltip("Enable puzzle reset")]
-    public bool enablePuzzleHardReset = false;
+	void Reset()
+	{
+		Collider col = GetComponent<Collider>();
+		if (col != null)
+			col.isTrigger = true;
+	}
 
-    [Tooltip("When reset runs")]
-    public ResetTiming resetTiming = ResetTiming.OnReturnButton;
+	void Awake()
+	{
+		CachePuzzleEntryTransforms();
+	}
 
-    [Tooltip("Only these entries are reset")]
-    public PuzzleResetEntry[] puzzleResetEntries;
+	private void OnTriggerEnter(Collider other)
+	{
+		if (other == null || !other.CompareTag("Fingertip"))
+			return;
 
-    void Awake()
-    {
-        CachePuzzleEntryTransforms();
-    }
+		ApplyPuzzleReset();
+	}
 
-    public void TryHardReset(ResetTiming trigger)
-    {
-        if (!enablePuzzleHardReset)
-            return;
+	public void ApplyPuzzleReset()
+	{
+		HardResetConfiguredPuzzles();
+	}
 
-        bool shouldRun = resetTiming == ResetTiming.OnBoth || resetTiming == trigger;
-        if (!shouldRun)
-            return;
+	private void HardResetConfiguredPuzzles()
+	{
+		if (puzzleResetEntries == null || puzzleResetEntries.Length == 0)
+			return;
 
-        HardResetConfiguredPuzzles();
-    }
+		for (int i = 0; i < puzzleResetEntries.Length; i++)
+		{
+			PuzzleResetEntry entry = puzzleResetEntries[i];
+			if (entry == null)
+				continue;
 
-    public void HardResetConfiguredPuzzles()
-    {
-        if (puzzleResetEntries == null || puzzleResetEntries.Length == 0)
-            return;
+			if (entry.liveInstance != null)
+			{
+				if (!entry.hasCached)
+				{
+					entry.cachedPosition = entry.liveInstance.transform.position;
+					entry.cachedRotation = entry.liveInstance.transform.rotation;
+					entry.cachedParent = entry.liveInstance.transform.parent;
+					entry.hasCached = true;
+				}
 
-        for (int i = 0; i < puzzleResetEntries.Length; i++)
-        {
-            PuzzleResetEntry entry = puzzleResetEntries[i];
-            if (entry == null)
-                continue;
+				Destroy(entry.liveInstance);
+				entry.liveInstance = null;
+			}
 
-            if (entry.liveInstance != null)
-            {
-                if (!entry.hasCached)
-                {
-                    entry.cachedPosition = entry.liveInstance.transform.position;
-                    entry.cachedRotation = entry.liveInstance.transform.rotation;
-                    entry.cachedParent = entry.liveInstance.transform.parent;
-                    entry.hasCached = true;
-                }
+			if (entry.prefab == null || !entry.hasCached)
+				continue;
 
-                Destroy(entry.liveInstance);
-                entry.liveInstance = null;
-            }
+			GameObject fresh = Instantiate(entry.prefab, entry.cachedPosition, entry.cachedRotation, entry.cachedParent);
+			entry.liveInstance = fresh;
+		}
+	}
 
-            if (entry.prefab == null || !entry.hasCached)
-                continue;
+	private void CachePuzzleEntryTransforms()
+	{
+		if (puzzleResetEntries == null)
+			return;
 
-            GameObject fresh = Instantiate(entry.prefab, entry.cachedPosition, entry.cachedRotation, entry.cachedParent);
-            entry.liveInstance = fresh;
-        }
-    }
+		for (int i = 0; i < puzzleResetEntries.Length; i++)
+		{
+			PuzzleResetEntry entry = puzzleResetEntries[i];
+			if (entry == null || entry.liveInstance == null)
+				continue;
 
-    private void CachePuzzleEntryTransforms()
-    {
-        if (puzzleResetEntries == null)
-            return;
-
-        for (int i = 0; i < puzzleResetEntries.Length; i++)
-        {
-            PuzzleResetEntry entry = puzzleResetEntries[i];
-            if (entry == null || entry.liveInstance == null)
-                continue;
-
-            entry.cachedPosition = entry.liveInstance.transform.position;
-            entry.cachedRotation = entry.liveInstance.transform.rotation;
-            entry.cachedParent = entry.liveInstance.transform.parent;
-            entry.hasCached = true;
-        }
-    }
+			entry.cachedPosition = entry.liveInstance.transform.position;
+			entry.cachedRotation = entry.liveInstance.transform.rotation;
+			entry.cachedParent = entry.liveInstance.transform.parent;
+			entry.hasCached = true;
+		}
+	}
 
 #if UNITY_EDITOR
-    void OnValidate()
-    {
-        CachePuzzleEntryTransforms();
-    }
+	void OnValidate()
+	{
+		CachePuzzleEntryTransforms();
+	}
 #endif
 }
