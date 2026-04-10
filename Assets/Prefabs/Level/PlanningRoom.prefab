@@ -126,6 +126,7 @@ GameObject:
   - component: {fileID: 2934902885729342929}
   - component: {fileID: 1870543103011314323}
   - component: {fileID: 6249772715068699696}
+  - component: {fileID: 1062323860725898951}
   m_Layer: 0
   m_Name: Play
   m_TagString: Untagged
@@ -269,6 +270,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapSelectionButton
   identity: 8
   manager: {fileID: 0}
+--- !u!114 &1062323860725898951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1393658318465578606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89f813e8dc06d294db5585a451aecc99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PuzzleReset
+  puzzleResetEntries:
+  - prefab: {fileID: 5568024293022973862, guid: d302ab2f5263b8340a9324f07ba3caf8, type: 3}
+    liveInstance: {fileID: 0}
+    cachedPosition: {x: -28, y: -5, z: 2}
+    cachedRotation: {x: -0, y: -0, z: -0, w: 1}
+    cachedParent: {fileID: 0}
+    hasCached: 1
+  - prefab: {fileID: 9001060076008351169, guid: 3632a08b330aa26498981bf8b8ba2c0a, type: 3}
+    liveInstance: {fileID: 0}
+    cachedPosition: {x: -85, y: -5, z: -63}
+    cachedRotation: {x: -0, y: 0.7071059, z: -0, w: 0.7071078}
+    cachedParent: {fileID: 0}
+    hasCached: 1
 --- !u!1 &1663315792483388831
 GameObject:
   m_ObjectHideFlags: 0
@@ -2000,13 +2026,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7052891216339209934}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 61, y: 0, z: -64}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: 6, y: 0, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3324822532936938835}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!1 &7162567520362348237
 GameObject:
   m_ObjectHideFlags: 0
