@@ -18118,7 +18118,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1383221709142212415, guid: cddd58f180ebffe40b6b453f24c6f444, type: 3}
       propertyPath: m_Range
-      value: 25
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 1383221709142212415, guid: cddd58f180ebffe40b6b453f24c6f444, type: 3}
       propertyPath: m_Color.b
@@ -18142,7 +18142,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3857454717036127715, guid: cddd58f180ebffe40b6b453f24c6f444, type: 3}
       propertyPath: detectionRange
-      value: 25
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3857454717036127715, guid: cddd58f180ebffe40b6b453f24c6f444, type: 3}
       propertyPath: persistentGizmo
