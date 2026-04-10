@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPS643 VR Project - Intergalactic Heist</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+
+    :root {
+      --bg: #0b0d12;
+      --card: #141927;
+      --text: #f2f5ff;
+      --muted: #a9b3cc;
+      --accent: #5eead4;
+      --accent-2: #f97316;
+      --border: #2a3248;
+      --card-glow: rgba(94, 234, 212, 0.08);
+      --title: #eef4ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1f2a44 0%, transparent 60%),
+        radial-gradient(1000px 560px at 100% 0%, #35223a 0%, transparent 58%),
+        linear-gradient(115deg, rgba(94,234,212,0.04) 0%, transparent 32%),
+        linear-gradient(295deg, rgba(249,115,22,0.035) 0%, transparent 36%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.62;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 42px 42px, 42px 42px;
+      mask-image: radial-gradient(circle at center, black 25%, transparent 95%);
+      opacity: 0.35;
+    }
+
+    .container {
+      width: min(1280px, 96vw);
+      margin: 0 auto;
+      padding: 36px 0 68px;
+    }
+
+    .hero {
+      background: linear-gradient(140deg, #131a2e 0%, #1b243c 45%, #2b1a2f 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 34px;
+      box-shadow:
+        0 20px 40px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 12px;
+      z-index: 20;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(13, 18, 32, 0.88);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.28);
+      padding: 10px 12px;
+    }
+
+    .top-nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .top-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      color: #dbe5ff;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .top-nav a:hover {
+      text-decoration: none;
+      border-color: #38506b;
+      background: rgba(94, 234, 212, 0.08);
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      display: inline-grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      font-size: 0.78rem;
+      line-height: 1;
+    }
+
+    h1, h2, h3 { margin: 0 0 12px; }
+    h1 {
+      font-size: clamp(2rem, 3.4vw, 2.8rem);
+      color: var(--title);
+      letter-spacing: 0.2px;
+      line-height: 1.2;
+    }
+    h2 {
+      font-size: 1.35rem;
+      margin-top: 28px;
+      letter-spacing: 0.2px;
+      color: #eff3ff;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .chip {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 1.02rem;
+      max-width: 110ch;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .panel {
+      scroll-margin-top: 96px;
+      margin-top: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow:
+        0 10px 24px rgba(0,0,0,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 0 0 1px rgba(94, 234, 212, 0.04);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .placeholder {
+      min-height: 152px;
+      border: 1px dashed #4a5677;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      background: linear-gradient(135deg, rgba(94,234,212,0.08), rgba(249,115,22,0.08));
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #37506e;
+      background: rgba(94, 234, 212, 0.08);
+      color: #bffaf1;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      letter-spacing: 0.15px;
+    }
+
+    .chip strong {
+      font-size: 0.96rem;
+      letter-spacing: 0.2px;
+      color: #f3f6ff;
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 24px; border-radius: 16px; }
+      .panel { padding: 16px; border-radius: 14px; }
+      .container { width: 94vw; }
+      .muted { font-size: 0.98rem; }
+      .top-nav { top: 8px; padding: 8px; }
+      .top-nav ul { gap: 6px; }
+      .top-nav a { padding: 6px 8px; font-size: 0.82rem; }
+      .nav-icon { width: 18px; height: 18px; font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav class="top-nav" aria-label="Page sections">
+      <ul>
+        <li><a href="#overview"><span class="nav-icon">◎</span>Overview</a></li>
+        <li><a href="#description"><span class="nav-icon">✦</span>Description</a></li>
+        <li><a href="#video"><span class="nav-icon">▶</span>Video</a></li>
+        <li><a href="#images"><span class="nav-icon">▦</span>Images</a></li>
+        <li><a href="#notes"><span class="nav-icon">⌁</span>Notes</a></li>
+      </ul>
+    </nav>
+
+    <section class="hero" id="overview">
+      <h1>Intergalactic Heist</h1>
+      <p class="muted">Intergalactic Heist is a room-scale VR stealth and puzzle project where players infiltrate a high-security sci-fi facility, solve layered interaction challenges, and attempt extraction while managing risk. The gameplay includes 2 spawn points, a clue-based puzzle room, and a safe haptic room that lets the player steal either a Ray Gun or a Potion. After collecting the objective, the player must escape without getting caught; if caught by security, the player is sent to the death sequence and respawns to try again.</p>
+      <span class="badge">CPS643 Virtual Reality Project</span>
+
+      <div class="meta">
+        <div class="chip">
+          <strong>Institution</strong><br>
+          Toronto Metropolitan University, Department of Computer Science
+        </div>
+        <div class="chip">
+          <strong>Course</strong><br>
+          CPS643 Virtual Reality
+        </div>
+        <div class="chip">
+          <strong>Project Title</strong><br>
+          Intergalactic Heist
+        </div>
+        <div class="chip">
+          <strong>Project Authors</strong><br>
+          Arshia Sharifi, Parsa Kermanipour
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="description">
+      <h2>Project Description</h2>
+      <p>Players begin by navigating a futuristic mission space and progressing through puzzle-controlled zones. To advance, they interact directly with world objects in VR: entering combinations, rotating locks under directional and speed constraints, and collecting required mission items. The flow includes two spawn points, a clue-based puzzle room, and a safe haptic room where the player can steal either a Ray Gun or a Potion. After obtaining an objective item, the player must escape without being caught; if security catches the player, the death sequence triggers and the player respawns to continue the heist attempt.</p>
+    </section>
+
+    <section class="panel" id="video">
+      <h2>Project Video</h2>
+      <p><a href="#">Video link placeholder (add final URL here)</a></p>
+    </section>
+
+    <section class="panel" id="images">
+      <h2>Images</h2>
+      <div class="gallery">
+        <div class="placeholder">Image Placeholder 1<br>Intro Room</div>
+        <div class="placeholder">Image Placeholder 2<br>Safe Puzzle</div>
+        <div class="placeholder">Image Placeholder 3<br>Keypad Puzzle</div>
+        <div class="placeholder">Image Placeholder 4<br>Laser Hazard</div>
+        <div class="placeholder">Image Placeholder 5<br>Objective Pickup</div>
+        <div class="placeholder">Image Placeholder 6<br>Exit Portal</div>
+        <div class="placeholder">Image Placeholder 7<br>Death Scene</div>
+        <div class="placeholder">Image Placeholder 8<br>Planning Room</div>
+      </div>
+    </section>
+
+    <section class="panel" id="notes">
+      <h2>Additional Notes</h2>
+      <ul>
+        <li><a href="#">Repository</a></li>
+        <li><a href="#">Script Documentation</a></li>
+        <li><a href="#">Development Notes</a></li>
+        <li><a href="#">Playtest Clips</a></li>
+      </ul>
+    </section>
+
+    <p class="footer-note">Copyright © 2026 Intergalactic Heist Team. All rights reserved.</p>
+  </main>
+</body>
+</html>

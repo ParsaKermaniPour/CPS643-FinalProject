@@ -2711,6 +2711,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1196509529932183241}
     m_Modifications:
+    - target: {fileID: 236697584085258168, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
+      propertyPath: m_text
+      value: Number of Corners on a Square
+      objectReference: {fileID: 0}
     - target: {fileID: 241072559096609886, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 21.037
@@ -2854,6 +2858,10 @@ PrefabInstance:
     - target: {fileID: 3077870154291858718, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3576800568527870611, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
+      propertyPath: m_text
+      value: Number of letters in Apple
       objectReference: {fileID: 0}
     - target: {fileID: 4671950049310717362, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_LocalPosition.x
