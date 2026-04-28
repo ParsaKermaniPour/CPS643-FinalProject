@@ -25,6 +25,12 @@ public class MapSelectionManager : MonoBehaviour
     [SerializeField] private Color floorButtonColor = Color.yellow;
     [SerializeField] private Color playButtonColor = Color.black;
     
+    // Quick Select support
+    private bool quickSelectActive = false;
+    private int quickSelectedSpawn = -1;
+    private int quickSelectedObjective = -1;
+    private int quickSelectedExit = -1;
+
     private int selectedSpawnIndex = -1;
     private int selectedObjectiveIndex = -1;
     private int selectedExitIndex = -1;
@@ -101,6 +107,10 @@ public class MapSelectionManager : MonoBehaviour
 
     public void OnButtonPressed(MapSelectionButton.ButtonIdentity identity)
     {
+            // If quick select is active, ignore manual map selection
+            if (quickSelectActive && identity != MapSelectionButton.ButtonIdentity.Play)
+                return;
+
         switch (identity)
         {
             case MapSelectionButton.ButtonIdentity.SpawnOne:
@@ -140,12 +150,54 @@ public class MapSelectionManager : MonoBehaviour
                 UpdatePlayButton();
                 break;
             case MapSelectionButton.ButtonIdentity.Play:
-                if (selectedSpawnIndex >= 0 && selectedObjectiveIndex >= 0 && selectedExitIndex >= 0)
+                    if (quickSelectActive)
+                    {
+                        // Use quick select values
+                        selectedSpawnIndex = quickSelectedSpawn;
+                        selectedObjectiveIndex = quickSelectedObjective;
+                        selectedExitIndex = quickSelectedExit;
+                    }
+                    if (selectedSpawnIndex >= 0 && selectedObjectiveIndex >= 0 && selectedExitIndex >= 0)
+                    {
+                        ConfigureBlockers();
+                        TeleportPlayerToSpawn();
+                    }
+                    break;
+            // --- QUICK SELECT FEATURE ---
+            public void QuickSelectRobbery(QuickSelectButton.RobberyType type)
+            {
+                quickSelectActive = true;
+                // Potion = 0, RayGun = 1 (adjust if your indices differ)
+                if (type == QuickSelectButton.RobberyType.Potion)
                 {
-                    ConfigureBlockers();
-                    TeleportPlayerToSpawn();
+                    quickSelectedSpawn = 0;
+                    quickSelectedObjective = 0;
                 }
-                break;
+                else
+                {
+                    quickSelectedSpawn = 1;
+                    quickSelectedObjective = 1;
+                }
+                // Randomly pick exit 0 or 1
+                quickSelectedExit = Random.Range(0, 2);
+
+                // Update visuals
+                selectedSpawnIndex = quickSelectedSpawn;
+                selectedObjectiveIndex = quickSelectedObjective;
+                selectedExitIndex = quickSelectedExit;
+                UpdateSpawnButtonColors();
+                UpdateObjectiveButtonColors();
+                UpdateExitButtonColors();
+                UpdatePlayButton();
+            }
+
+            // Call this if the player interacts with the map after quick select, to disable quick select
+            public void DisableQuickSelect()
+            {
+                quickSelectActive = false;
+                QuickSelectButton.ResetQuickSelect();
+                // Optionally reset selections or keep last state
+            }
         }
     }
 
