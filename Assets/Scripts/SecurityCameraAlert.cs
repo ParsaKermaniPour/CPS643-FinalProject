@@ -57,8 +57,8 @@ public class SecurityCameraAlert : MonoBehaviour
                 Debug.LogWarning($"SecurityCameraAlert: No RobotPatrolWalker components found in '{robotContainerName}' hierarchy.");
         }
 
-        Debug.Log("[SecurityCameraAlert] FORCED TEST: Calling TeleportPlayer from Start");
-        TeleportPlayer();
+        // Debug.Log("[SecurityCameraAlert] FORCED TEST: Calling TeleportPlayer from Start");
+        // TeleportPlayer();
     }
 
     private void Update()

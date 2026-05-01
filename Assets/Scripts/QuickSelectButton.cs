@@ -7,7 +7,12 @@ public class QuickSelectButton : MonoBehaviour
     public RobberyType robberyType;
     public Color selectedColor = Color.green;
     public Color unselectedColor = Color.red;
-    public Image buttonImage; // Assign in inspector if using UI Image, or swap for MeshRenderer if 3D
+    public Image buttonImage;
+    public MeshRenderer buttonRenderer;
+
+    [Header("Doors")]
+    public GameObject potionDoor;   // drag the safe room door blocker here
+    public GameObject rayGunDoor;   // drag the keypad room door blocker here
 
     private MapSelectionManager manager;
     private static QuickSelectButton activeQuickSelect;
@@ -17,6 +22,8 @@ public class QuickSelectButton : MonoBehaviour
         manager = FindFirstObjectByType<MapSelectionManager>();
         if (buttonImage == null)
             buttonImage = GetComponent<Image>();
+        if (buttonRenderer == null)
+            buttonRenderer = GetComponent<MeshRenderer>();
         SetSelected(false);
     }
 
@@ -26,14 +33,28 @@ public class QuickSelectButton : MonoBehaviour
             activeQuickSelect.SetSelected(false);
         activeQuickSelect = this;
         SetSelected(true);
+
+        // Directly control doors
+        if (potionDoor != null) potionDoor.SetActive(robberyType != RobberyType.Potion);
+        if (rayGunDoor != null) rayGunDoor.SetActive(robberyType != RobberyType.RayGun);
+
         if (manager != null)
             manager.QuickSelectRobbery(robberyType);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Fingertip"))
+            return;
+        OnButtonPressed();
     }
 
     public void SetSelected(bool selected)
     {
         if (buttonImage != null)
             buttonImage.color = selected ? selectedColor : unselectedColor;
+        if (buttonRenderer != null && buttonRenderer.material != null)
+            buttonRenderer.material.color = selected ? selectedColor : unselectedColor;
     }
 
     public static void ResetQuickSelect()

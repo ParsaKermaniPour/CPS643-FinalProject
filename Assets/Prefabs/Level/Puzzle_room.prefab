@@ -2754,42 +2754,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 16.6414
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.4012
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 39.967
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 492569039959789059, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 90
-      objectReference: {fileID: 0}
     - target: {fileID: 523413192076331557, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_Name
       value: KeypadPuzzles
@@ -2875,16 +2839,8 @@ PrefabInstance:
       value: Number of letters in Apple
       objectReference: {fileID: 0}
     - target: {fileID: 4671950049310717362, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1.769
-      objectReference: {fileID: 0}
-    - target: {fileID: 4671950049310717362, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.493
-      objectReference: {fileID: 0}
-    - target: {fileID: 4671950049310717362, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 21.5906
       objectReference: {fileID: 0}
     - target: {fileID: 4671950049310717362, guid: 9b57135aef1d21e4db0b32050b372af0, type: 3}
       propertyPath: m_LocalRotation.w

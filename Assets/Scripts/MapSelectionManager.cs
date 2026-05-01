@@ -25,7 +25,6 @@ public class MapSelectionManager : MonoBehaviour
     [SerializeField] private Color floorButtonColor = Color.yellow;
     [SerializeField] private Color playButtonColor = Color.black;
     
-    // Quick Select support
     private bool quickSelectActive = false;
     private int quickSelectedSpawn = -1;
     private int quickSelectedObjective = -1;
@@ -48,7 +47,6 @@ public class MapSelectionManager : MonoBehaviour
             }
         }
 
-        // Initialize floors - show only the first one
         InitializeFloors();
     }
 
@@ -63,7 +61,6 @@ public class MapSelectionManager : MonoBehaviour
                 floorObjects[i].SetActive(i == currentFloorIndex);
         }
 
-        // Disable all blockers at start
         foreach (var blocker in spawnBlockerObjects)
             if (blocker != null)
                 blocker.SetActive(false);
@@ -76,22 +73,17 @@ public class MapSelectionManager : MonoBehaviour
             if (blocker != null)
                 blocker.SetActive(false);
 
-        // Initialize button colors
         InitializeButtonColors();
-
-        // Initialize play button as disabled
         UpdatePlayButton();
     }
 
     void InitializeButtonColors()
     {
-        // Set floor buttons to yellow
         if (floorUpRenderer != null)
             floorUpRenderer.material.color = floorButtonColor;
         if (floorDownRenderer != null)
             floorDownRenderer.material.color = floorButtonColor;
 
-        // Set spawn/objective/exit buttons to red
         for (int i = 0; i < spawnButtonRenderers.Length; i++)
             if (spawnButtonRenderers[i] != null)
                 spawnButtonRenderers[i].material.color = unselectedColor;
@@ -107,9 +99,8 @@ public class MapSelectionManager : MonoBehaviour
 
     public void OnButtonPressed(MapSelectionButton.ButtonIdentity identity)
     {
-            // If quick select is active, ignore manual map selection
-            if (quickSelectActive && identity != MapSelectionButton.ButtonIdentity.Play)
-                return;
+        if (quickSelectActive && identity != MapSelectionButton.ButtonIdentity.Play)
+            return;
 
         switch (identity)
         {
@@ -150,55 +141,76 @@ public class MapSelectionManager : MonoBehaviour
                 UpdatePlayButton();
                 break;
             case MapSelectionButton.ButtonIdentity.Play:
+                if (quickSelectActive)
+                {
+                    selectedSpawnIndex = quickSelectedSpawn;
+                    selectedObjectiveIndex = quickSelectedObjective;
+                    selectedExitIndex = quickSelectedExit;
+                }
+                if (selectedSpawnIndex >= 0 && selectedObjectiveIndex >= 0 && selectedExitIndex >= 0)
+                {
+                    ConfigureBlockers();
                     if (quickSelectActive)
                     {
-                        // Use quick select values
-                        selectedSpawnIndex = quickSelectedSpawn;
-                        selectedObjectiveIndex = quickSelectedObjective;
-                        selectedExitIndex = quickSelectedExit;
+                        TeleportPlayerToFixedPosition(new Vector3(0f, 0f, -30f), Quaternion.Euler(0, 90, 0));
                     }
-                    if (selectedSpawnIndex >= 0 && selectedObjectiveIndex >= 0 && selectedExitIndex >= 0)
+                    else
                     {
-                        ConfigureBlockers();
                         TeleportPlayerToSpawn();
                     }
-                    break;
-            // --- QUICK SELECT FEATURE ---
-            public void QuickSelectRobbery(QuickSelectButton.RobberyType type)
-            {
-                quickSelectActive = true;
-                // Potion = 0, RayGun = 1 (adjust if your indices differ)
-                if (type == QuickSelectButton.RobberyType.Potion)
-                {
-                    quickSelectedSpawn = 0;
-                    quickSelectedObjective = 0;
                 }
-                else
-                {
-                    quickSelectedSpawn = 1;
-                    quickSelectedObjective = 1;
-                }
-                // Randomly pick exit 0 or 1
-                quickSelectedExit = Random.Range(0, 2);
-
-                // Update visuals
-                selectedSpawnIndex = quickSelectedSpawn;
-                selectedObjectiveIndex = quickSelectedObjective;
-                selectedExitIndex = quickSelectedExit;
-                UpdateSpawnButtonColors();
-                UpdateObjectiveButtonColors();
-                UpdateExitButtonColors();
-                UpdatePlayButton();
-            }
-
-            // Call this if the player interacts with the map after quick select, to disable quick select
-            public void DisableQuickSelect()
-            {
-                quickSelectActive = false;
-                QuickSelectButton.ResetQuickSelect();
-                // Optionally reset selections or keep last state
-            }
+                break;
         }
+    }
+
+    private void TeleportPlayerToFixedPosition(Vector3 position, Quaternion rotation)
+    {
+        if (rigRoot == null)
+            return;
+
+        CharacterController characterController = rigRoot.GetComponent<CharacterController>();
+        if (characterController != null && characterController.enabled)
+        {
+            characterController.enabled = false;
+            rigRoot.position = position;
+            rigRoot.rotation = rotation;
+            characterController.enabled = true;
+        }
+        else
+        {
+            rigRoot.position = position;
+            rigRoot.rotation = rotation;
+        }
+    }
+
+    public void QuickSelectRobbery(QuickSelectButton.RobberyType type)
+    {
+        Debug.Log("QuickSelectRobbery called with type: " + type + " | objective will be: " + (type == QuickSelectButton.RobberyType.Potion ? 1 : 0));
+        quickSelectActive = true;
+        quickSelectedSpawn = 0;
+        if (type == QuickSelectButton.RobberyType.Potion)
+        {
+            quickSelectedObjective = 1; // Safe puzzle room
+        }
+        else
+        {
+            quickSelectedObjective = 0; // Keypad/ray gun puzzle room
+        }
+        quickSelectedExit = Random.Range(0, 2);
+
+        selectedSpawnIndex = quickSelectedSpawn;
+        selectedObjectiveIndex = quickSelectedObjective;
+        selectedExitIndex = quickSelectedExit;
+        UpdateSpawnButtonColors();
+        UpdateObjectiveButtonColors();
+        UpdateExitButtonColors();
+        UpdatePlayButton();
+    }
+
+    public void DisableQuickSelect()
+    {
+        quickSelectActive = false;
+        QuickSelectButton.ResetQuickSelect();
     }
 
     private void FloorUp()
@@ -234,21 +246,18 @@ public class MapSelectionManager : MonoBehaviour
 
     private void ConfigureBlockers()
     {
-        // Configure spawn blockers - disable selected, enable unselected
         for (int i = 0; i < spawnBlockerObjects.Length; i++)
         {
             if (spawnBlockerObjects[i] != null)
                 spawnBlockerObjects[i].SetActive(i != selectedSpawnIndex);
         }
 
-        // Configure objective blockers - disable selected, enable unselected
         for (int i = 0; i < objectiveBlockerObjects.Length; i++)
         {
             if (objectiveBlockerObjects[i] != null)
                 objectiveBlockerObjects[i].SetActive(i != selectedObjectiveIndex);
         }
 
-        // Configure exit blockers - disable selected, enable unselected
         for (int i = 0; i < exitBlockerObjects.Length; i++)
         {
             if (exitBlockerObjects[i] != null)
