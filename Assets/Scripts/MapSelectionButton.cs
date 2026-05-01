@@ -29,7 +29,10 @@ public class MapSelectionButton : MonoBehaviour
         if (!other.CompareTag("Fingertip"))
             return;
 
-        if (manager != null)
-            manager.OnButtonPressed(identity);
+            if (manager != null)
+            {
+                manager.DisableQuickSelect();
+                manager.OnButtonPressed(identity);
+            }
     }
 }

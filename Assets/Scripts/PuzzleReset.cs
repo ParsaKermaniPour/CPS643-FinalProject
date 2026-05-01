@@ -43,7 +43,10 @@ public class PuzzleReset : MonoBehaviour
 
 	public void ApplyPuzzleReset()
 	{
-		HardResetConfiguredPuzzles();
+		if (WristNotepad.Instance != null)
+        WristNotepad.Instance.ResetClues();
+        
+    	HardResetConfiguredPuzzles();
 	}
 
 	private void HardResetConfiguredPuzzles()
