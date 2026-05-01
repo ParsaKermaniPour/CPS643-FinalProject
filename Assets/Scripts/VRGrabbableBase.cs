@@ -1,15 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Abstract base class for any VR-interactable object.
-/// Handles controller proximity detection and grip press/release.
-/// Extend this for Dial, Slider, Button, Lever, etc.
-///
-/// How it works:
-///   - A trigger sphere collider on this object detects when a controller is nearby
-///   - When the player presses Grip while a controller is inside that sphere, the grab starts
-///   - Subclasses implement OnGrabStart / OnGrabUpdate / OnGrabEnd to define behavior
-/// </summary>
 public abstract class VRGrabbableBase : MonoBehaviour
 {
     [Header("Grab Detection")]
@@ -19,30 +9,24 @@ public abstract class VRGrabbableBase : MonoBehaviour
     [Tooltip("Visual highlight when the controller is inside grab range")]
     public GameObject highlightObject;
 
-    // Currently grabbing controller (None if not grabbed)
     protected OVRInput.Controller grabbingController = OVRInput.Controller.None;
-
-    // Transform of the grabbing controller anchor
     protected Transform grabbingControllerTransform;
 
     private bool leftInRange = false;
     private bool rightInRange = false;
     private SphereCollider grabZone;
 
-    // Global per-controller lock so one hand can only hold one grabbable at a time.
     private static VRGrabbableBase leftControllerOwner;
     private static VRGrabbableBase rightControllerOwner;
 
     protected virtual void Awake()
     {
-        // Add Rigidbody if missing, then lock it so object never physically moves
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb == null)
             rb = gameObject.AddComponent<Rigidbody>();
         rb.isKinematic = true;
         rb.useGravity = false;
 
-        // Create an invisible sphere trigger for grab detection
         grabZone = gameObject.AddComponent<SphereCollider>();
         grabZone.isTrigger = true;
         grabZone.radius = grabRadius;
@@ -63,28 +47,23 @@ public abstract class VRGrabbableBase : MonoBehaviour
 
     private void HandleGrabInput()
     {
-        // --- Left controller ---
         bool leftGripDown  = OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch);
-        bool leftGripUp    = OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger,   OVRInput.Controller.LTouch);
-
-        // --- Right controller ---
         bool rightGripDown = OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch);
-        bool rightGripUp   = OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger,   OVRInput.Controller.RTouch);
 
-        // Try to grab
         if (grabbingController == OVRInput.Controller.None)
         {
+            // Not holding - click to grab
             if (leftInRange && leftGripDown && CanStartGrab(OVRInput.Controller.LTouch))
                 StartGrab(OVRInput.Controller.LTouch);
             else if (rightInRange && rightGripDown && CanStartGrab(OVRInput.Controller.RTouch))
                 StartGrab(OVRInput.Controller.RTouch);
         }
-        // Release if grip is let go
         else
         {
-            bool released = (grabbingController == OVRInput.Controller.LTouch && leftGripUp)
-                         || (grabbingController == OVRInput.Controller.RTouch && rightGripUp);
-            if (released)
+            // Already holding - click again to drop
+            bool clickedAgain = (grabbingController == OVRInput.Controller.LTouch && leftGripDown)
+                             || (grabbingController == OVRInput.Controller.RTouch && rightGripDown);
+            if (clickedAgain)
                 EndGrab();
         }
     }
@@ -111,7 +90,6 @@ public abstract class VRGrabbableBase : MonoBehaviour
 
     protected virtual void OnDisable()
     {
-        // Safety cleanup so stale owner references never block future grabs.
         if (grabbingController != OVRInput.Controller.None)
         {
             ClearControllerOwner(grabbingController, this);
@@ -156,10 +134,8 @@ public abstract class VRGrabbableBase : MonoBehaviour
             rightControllerOwner = null;
     }
 
-    // Returns the world-space transform of the given controller anchor
     private Transform GetControllerTransform(OVRInput.Controller controller)
     {
-        // Find OVRCameraRig's tracking space anchors
         OVRCameraRig rig = FindFirstObjectByType<OVRCameraRig>();
         if (rig == null) return null;
 
@@ -168,8 +144,6 @@ public abstract class VRGrabbableBase : MonoBehaviour
         else
             return rig.rightHandAnchor;
     }
-
-    // ---- Trigger callbacks for detecting controller in range ----
 
     private void OnTriggerEnter(Collider other)
     {
@@ -208,15 +182,8 @@ public abstract class VRGrabbableBase : MonoBehaviour
             highlightObject.SetActive(false);
     }
 
-    // ---- Override these in subclasses ----
-
-    /// <summary>Called once when the player grips and grabs this object</summary>
     protected abstract void OnGrabStart();
-
-    /// <summary>Called every frame while the object is held</summary>
     protected abstract void OnGrabUpdate();
-
-    /// <summary>Called once when the player releases the grip</summary>
     protected abstract void OnGrabEnd();
 
     public bool IsGrabbed => grabbingController != OVRInput.Controller.None;
