@@ -141,12 +141,10 @@ public class DeathRoomFlow : MonoBehaviour
 
         if (mode == FlowMode.DeathTrigger)
         {
-            TryHardReset(ResetTiming.OnDeathTrigger);
             TeleportRigTo(deathRoomSpawn, fallbackDeathRoomPosition);
         }
         else
         {
-            TryHardReset(ResetTiming.OnReturnButton);
             TeleportRigTo(planningRoomSpawn, fallbackPlanningRoomPosition);
         }
     }
