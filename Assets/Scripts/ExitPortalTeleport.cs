@@ -282,8 +282,13 @@ public class ExitPortalTeleport : MonoBehaviour
 
         if (rig != null && rig.centerEyeAnchor != null)
         {
+            // Preserve current eye height so standing/seated both feel correct.
+            float eyeHeight = rig.centerEyeAnchor.position.y - rig.transform.position.y;
+            Vector3 adjustedTarget = targetPosition;
+            adjustedTarget.y += eyeHeight;
+
             Vector3 eyeToRigOffset = rig.transform.position - rig.centerEyeAnchor.position;
-            Vector3 rigTarget = targetPosition + eyeToRigOffset;
+            Vector3 rigTarget = adjustedTarget + eyeToRigOffset;
             if (verboseDebug)
                 Debug.Log($"[ExitPortal] Rig teleport: rig='{rig.name}' eyeOffset={eyeToRigOffset} finalPos={rigTarget}");
             ApplyTransformSafely(rig.transform, rigTarget, targetRotation, applyTargetRotation && teleportTarget != null);

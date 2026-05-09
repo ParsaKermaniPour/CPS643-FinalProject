@@ -10,6 +10,7 @@ public class MapSelectionManager : MonoBehaviour
     [SerializeField] private Transform rigRoot;
     [SerializeField] private Transform centerEyeAnchor;
     [SerializeField] private GameObject playButtonObject;
+    [SerializeField] private GameObject wristNotepadRoot;
     
     [Header("Button Renderers")]
     [SerializeField] private Renderer[] spawnButtonRenderers = new Renderer[2];
@@ -75,6 +76,7 @@ public class MapSelectionManager : MonoBehaviour
 
         InitializeButtonColors();
         UpdatePlayButton();
+        SetWristNotepadForObjective(selectedObjectiveIndex);
     }
 
     void InitializeButtonColors()
@@ -124,11 +126,13 @@ public class MapSelectionManager : MonoBehaviour
                 selectedObjectiveIndex = 0;
                 UpdateObjectiveButtonColors();
                 UpdatePlayButton();
+                SetWristNotepadForObjective(selectedObjectiveIndex);
                 break;
             case MapSelectionButton.ButtonIdentity.ObjectiveTwo:
                 selectedObjectiveIndex = 1;
                 UpdateObjectiveButtonColors();
                 UpdatePlayButton();
+                SetWristNotepadForObjective(selectedObjectiveIndex);
                 break;
             case MapSelectionButton.ButtonIdentity.ExitOne:
                 selectedExitIndex = 0;
@@ -158,6 +162,9 @@ public class MapSelectionManager : MonoBehaviour
                     {
                         TeleportPlayerToSpawn();
                     }
+
+                    if (playButtonObject != null)
+                        playButtonObject.SetActive(false);
                 }
                 break;
         }
@@ -205,6 +212,7 @@ public class MapSelectionManager : MonoBehaviour
         UpdateObjectiveButtonColors();
         UpdateExitButtonColors();
         UpdatePlayButton();
+        SetWristNotepadForObjective(selectedObjectiveIndex);
     }
 
     public void DisableQuickSelect()
@@ -275,6 +283,14 @@ public class MapSelectionManager : MonoBehaviour
             playButtonRenderer.material.color = playButtonColor;
     }
 
+    private void SetWristNotepadForObjective(int objectiveIndex)
+    {
+        if (wristNotepadRoot == null)
+            return;
+
+        wristNotepadRoot.SetActive(objectiveIndex == 0);
+    }
+
     private void UpdateSpawnButtonColors()
     {
         for (int i = 0; i < spawnButtonRenderers.Length; i++)
@@ -317,22 +333,29 @@ public class MapSelectionManager : MonoBehaviour
             return;
 
         Transform spawnTransform = spawnLocations[selectedSpawnIndex];
+        CharacterController characterController = rigRoot.GetComponent<CharacterController>();
+        if (characterController != null && characterController.enabled)
+        {
+            characterController.enabled = false;
+            ApplySpawnTransform(spawnTransform);
+            characterController.enabled = true;
+        }
+        else
+        {
+            ApplySpawnTransform(spawnTransform);
+        }
+    }
+
+    private void ApplySpawnTransform(Transform spawnTransform)
+    {
+        float targetYaw = spawnTransform.eulerAngles.y;
+        rigRoot.rotation = Quaternion.Euler(0f, targetYaw, 0f);
+
         Vector3 eyeOffset = centerEyeAnchor.position - rigRoot.position;
         eyeOffset.y = 0f;
 
         Vector3 targetRigPosition = spawnTransform.position - eyeOffset;
         targetRigPosition.y = rigRoot.position.y;
-
-        CharacterController characterController = rigRoot.GetComponent<CharacterController>();
-        if (characterController != null && characterController.enabled)
-        {
-            characterController.enabled = false;
-            rigRoot.position = targetRigPosition;
-            characterController.enabled = true;
-        }
-        else
-        {
-            rigRoot.position = targetRigPosition;
-        }
+        rigRoot.position = targetRigPosition;
     }
 }
